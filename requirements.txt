@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+supabase
+face_recognition
+numpy
+pytest
+httpx
+python-multipart
+pyotp
+aiosmtplib
