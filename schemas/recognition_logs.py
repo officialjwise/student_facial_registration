@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 class RecognitionLogBase(BaseModel):
     """Base schema for recognition log data."""
-    student_id: int
+    student_id: UUID
     confidence_score: float
     camera_source: Optional[str]
 
@@ -13,7 +14,7 @@ class RecognitionLogCreate(RecognitionLogBase):
 
 class RecognitionLog(RecognitionLogBase):
     """Schema for returning recognition log data."""
-    id: int
+    id: UUID
     timestamp: str
 
     class Config:

@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 class AdminUser(BaseModel):
-    id: Optional[int]
+    id: Optional[UUID]
     email: str
     hashed_password: str
     is_verified: bool

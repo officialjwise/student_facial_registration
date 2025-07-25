@@ -7,9 +7,9 @@ from crud.recognition_logs import get_recognition_logs
 from crud.admin_users import update_admin_user, delete_admin_user
 from api.dependencies import get_current_admin
 from models.database import supabase
-from typing import List
-import logging
 from typing import List, Optional
+from uuid import UUID
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def list_all_students(_=Depends(get_current_admin)):
 
 @router.get("/recognition-logs", response_model=List[RecognitionLog])
 async def list_recognition_logs(
-    student_id: Optional[int] = None,
+    student_id: Optional[UUID] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     _=Depends(get_current_admin)
@@ -49,16 +49,16 @@ async def list_recognition_logs(
     return await get_recognition_logs(student_id, start_date, end_date)
 
 @router.put("/profile/{admin_id}", response_model=AdminUser)
-async def update_admin_profile(admin_id: int, admin: AdminUserUpdate, current_admin=Depends(get_current_admin)):
+async def update_admin_profile(admin_id: UUID, admin: AdminUserUpdate, current_admin=Depends(get_current_admin)):
     """Update admin profile."""
-    if current_admin["id"] != admin_id:
+    if current_admin["id"] != str(admin_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update other admin's profile")
     return await update_admin_user(admin_id, admin)
 
 @router.delete("/profile/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_admin_profile(admin_id: int, current_admin=Depends(get_current_admin)):
+async def delete_admin_profile(admin_id: UUID, current_admin=Depends(get_current_admin)):
     """Delete admin profile."""
-    if current_admin["id"] != admin_id:
+    if current_admin["id"] != str(admin_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete other admin's profile")
     await delete_admin_user(admin_id)
     return None

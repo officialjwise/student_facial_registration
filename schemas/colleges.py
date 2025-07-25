@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 class CollegeBase(BaseModel):
     """Base schema for college data."""
@@ -15,7 +16,7 @@ class CollegeUpdate(BaseModel):
 
 class College(CollegeBase):
     """Schema for returning college data."""
-    id: int
+    id: UUID
     created_at: str
 
     class Config:

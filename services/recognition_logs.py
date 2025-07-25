@@ -1,11 +1,12 @@
 from crud.recognition_logs import create_recognition_log
 from schemas.recognition_logs import RecognitionLogCreate
 from fastapi import HTTPException, status
+from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
 
-async def log_recognition(student_id: int, confidence: float, camera_source: str) -> None:
+async def log_recognition(student_id: UUID, confidence: float, camera_source: str) -> None:
     """Log a facial recognition event."""
     try:
         log = RecognitionLogCreate(

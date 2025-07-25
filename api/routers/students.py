@@ -5,6 +5,7 @@ from services.face_recognition import extract_face_embedding, recognize_face
 from services.recognition_logs import log_recognition
 from api.dependencies import get_current_admin
 from typing import List
+from uuid import UUID
 import base64
 import logging
 
@@ -28,7 +29,7 @@ async def register_student(student: StudentCreate, _=Depends(get_current_admin))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to register student")
 
 @router.get("/{student_id}", response_model=Student)
-async def get_student(student_id: int, _=Depends(get_current_admin)):
+async def get_student(student_id: UUID, _=Depends(get_current_admin)):
     """Retrieve a student by ID."""
     student = await get_student_by_id(student_id)
     if not student:
@@ -41,13 +42,13 @@ async def list_students(_=Depends(get_current_admin)):
     return await get_all_students()
 
 @router.put("/{student_id}", response_model=Student)
-async def update_student_details(student_id: int, student: StudentUpdate, _=Depends(get_current_admin)):
+async def update_student_details(student_id: UUID, student: StudentUpdate, _=Depends(get_current_admin)):
     """Update a student's details."""
     updated_student = await update_student(student_id, student)
     return updated_student
 
 @router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_student_record(student_id: int, _=Depends(get_current_admin)):
+async def delete_student_record(student_id: UUID, _=Depends(get_current_admin)):
     """Delete a student by ID."""
     await delete_student(student_id)
     return None

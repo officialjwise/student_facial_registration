@@ -3,6 +3,7 @@ from schemas.admin_users import AdminUserCreate, AdminUserUpdate, AdminUser
 from core.security import get_password_hash
 from fastapi import HTTPException, status
 from typing import List, Optional
+from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
@@ -33,13 +34,13 @@ async def get_admin_user_by_email(email: str) -> Optional[AdminUser]:
         logger.error(f"Error retrieving admin user {email}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-async def update_admin_user(admin_id: int, admin: AdminUserUpdate) -> AdminUser:
+async def update_admin_user(admin_id: UUID, admin: AdminUserUpdate) -> AdminUser:
     """Update an admin user's details."""
     try:
         data = admin.model_dump(exclude_unset=True)
         if "password" in data:
             data["hashed_password"] = get_password_hash(data.pop("password"))
-        response = supabase.table("admin_users").update(data).eq("id", admin_id).execute()
+        response = supabase.table("admin_users").update(data).eq("id", str(admin_id)).execute()
         if not response.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Admin user not found")
         logger.info(f"Updated admin user with ID: {admin_id}")
@@ -48,10 +49,10 @@ async def update_admin_user(admin_id: int, admin: AdminUserUpdate) -> AdminUser:
         logger.error(f"Error updating admin user {admin_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-async def delete_admin_user(admin_id: int) -> None:
+async def delete_admin_user(admin_id: UUID) -> None:
     """Delete an admin user by ID."""
     try:
-        response = supabase.table("admin_users").delete().eq("id", admin_id).execute()
+        response = supabase.table("admin_users").delete().eq("id", str(admin_id)).execute()
         if not response.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Admin user not found")
         logger.info(f"Deleted admin user with ID: {admin_id}")

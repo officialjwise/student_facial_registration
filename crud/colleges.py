@@ -2,6 +2,7 @@ from models.database import supabase
 from schemas.colleges import CollegeCreate, CollegeUpdate, College
 from fastapi import HTTPException, status
 from typing import List, Optional
+from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,10 +19,10 @@ async def create_college(college: CollegeCreate) -> College:
         logger.error(f"Error creating college: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-async def get_college_by_id(college_id: int) -> Optional[College]:
+async def get_college_by_id(college_id: UUID) -> Optional[College]:
     """Retrieve a college by ID."""
     try:
-        response = supabase.table("colleges").select("*").eq("id", college_id).execute()
+        response = supabase.table("colleges").select("*").eq("id", str(college_id)).execute()
         if response.data:
             return College(**response.data[0])
         return None
@@ -38,10 +39,10 @@ async def get_all_colleges() -> List[College]:
         logger.error(f"Error retrieving colleges: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-async def update_college(college_id: int, college: CollegeUpdate) -> College:
+async def update_college(college_id: UUID, college: CollegeUpdate) -> College:
     """Update a college's details."""
     try:
-        response = supabase.table("colleges").update(college.dict(exclude_unset=True)).eq("id", college_id).execute()
+        response = supabase.table("colleges").update(college.dict(exclude_unset=True)).eq("id", str(college_id)).execute()
         if not response.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="College not found")
         logger.info(f"Updated college with ID: {college_id}")
@@ -50,10 +51,10 @@ async def update_college(college_id: int, college: CollegeUpdate) -> College:
         logger.error(f"Error updating college {college_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-async def delete_college(college_id: int) -> None:
+async def delete_college(college_id: UUID) -> None:
     """Delete a college by ID."""
     try:
-        response = supabase.table("colleges").delete().eq("id", college_id).execute()
+        response = supabase.table("colleges").delete().eq("id", str(college_id)).execute()
         if not response.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="College not found")
         logger.info(f"Deleted college with ID: {college_id}")

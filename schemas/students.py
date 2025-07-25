@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List
+from uuid import UUID
 import re
 
 class StudentBase(BaseModel):
@@ -10,8 +11,8 @@ class StudentBase(BaseModel):
     middle_name: Optional[str]
     last_name: str
     email: EmailStr
-    college_id: int
-    department_id: int
+    college_id: UUID
+    department_id: UUID
 
     @validator("student_id")
     def validate_student_id(cls, v):
@@ -37,8 +38,8 @@ class StudentUpdate(BaseModel):
     middle_name: Optional[str]
     last_name: Optional[str]
     email: Optional[EmailStr]
-    college_id: Optional[int]
-    department_id: Optional[int]
+    college_id: Optional[UUID]
+    department_id: Optional[UUID]
     face_image: Optional[str]
 
     @validator("student_id")
@@ -55,7 +56,7 @@ class StudentUpdate(BaseModel):
 
 class Student(StudentBase):
     """Schema for returning student data."""
-    id: int
+    id: UUID
     face_embedding: List[float]
     created_at: str
 
