@@ -19,11 +19,11 @@ async def register_admin_endpoint(admin: AdminCreate):
 async def verify_otp(otp_data: OTPVerify):
     """Verify OTP for admin account activation."""
     try:
-        response = supabase.table("admin_users").select("*").eq("email", otp_data.email).eq("otp", otp_data.otp).execute()
+        response = supabase.table("admin_users").select("*").eq("email", otp_data.email).eq("otp_code", otp_data.otp).execute()
         if not response.data:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP or email")
         
-        supabase.table("admin_users").update({"is_verified": True, "otp": None}).eq("email", otp_data.email).execute()
+        supabase.table("admin_users").update({"is_verified": True, "otp_code": None}).eq("email", otp_data.email).execute()
         logger.info(f"Admin verified: {otp_data.email}")
         return {"message": "Account verified successfully"}
     except Exception as e:
