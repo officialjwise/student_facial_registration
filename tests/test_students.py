@@ -33,7 +33,7 @@ def test_register_student(auth_headers):
 def test_register_student_invalid_id(auth_headers):
     """Test student registration with invalid student ID."""
     student_data = {
-        "student_id": "12345", 
+        "student_id": "12345",  # Invalid: not 8 digits
         "index_number": "1234567",
         "first_name": "John",
         "last_name": "Doe",
@@ -44,5 +44,5 @@ def test_register_student_invalid_id(auth_headers):
     }
     
     response = client.post("/students/", json=student_data, headers=auth_headers)
-    assert response.status_code == 422  # Unprocessable Entity
+    assert response.status_code == 422
     assert "Student ID must be exactly 8 digits" in response.json()["detail"][0]["msg"]

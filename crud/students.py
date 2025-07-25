@@ -1,5 +1,5 @@
 from models.database import supabase
-from schemas.students import StudentCreate, Student
+from schemas.students import StudentCreate, StudentUpdate, Student
 from fastapi import HTTPException, status
 from typing import Optional, List
 import logging
@@ -38,4 +38,30 @@ async def get_all_students() -> List[Student]:
         return [Student(**student) for student in response.data]
     except Exception as e:
         logger.error(f"Error retrieving students: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+
+async def update_student(student_id: int, student: StudentUpdate) -> Student:
+    """Update a student's details."""
+    try:
+        data = student.dict(exclude_unset=True)
+        if "face_image" in data:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Face image update not allowed here")
+        response = supabase.table("students").update(data).eq("id", student_id).execute()
+        if not response.data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+        logger.info(f"Updated student with ID: {student_id}")
+        return Student(**response.data[0])
+    except Exception as e:
+        logger.error(f"Error updating student {student_id}: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+
+async def delete_student(student_id: int) -> None:
+    """Delete a student by ID."""
+    try:
+        response = supabase.table("students").delete().eq("id", student_id).execute()
+        if not response.data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+        logger.info(f"Deleted student with ID: {student_id}")
+    except Exception as e:
+        logger.error(f"Error deleting student {student_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

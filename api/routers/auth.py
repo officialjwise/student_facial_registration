@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from schemas.auth import AdminCreate, OTPVerify, Token
-from core.security import verify_password, get_password_hash, create_access_token
-from core.email import send_otp_email, generate_otp
+from core.security import verify_password, create_access_token
+from services.auth import register_admin
 from models.database import supabase
 import logging
 
@@ -11,29 +11,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_admin(admin: AdminCreate):
+async def register_admin_endpoint(admin: AdminCreate):
     """Register a new admin and send OTP for verification."""
-    try:
-        # Check if email already exists
-        if supabase.table("admin_users").select("email").eq("email", admin.email).execute().data:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-        
-        hashed_password = get_password_hash(admin.password)
-        otp = generate_otp()
-        
-        response = supabase.table("admin_users").insert({
-            "email": admin.email,
-            "hashed_password": hashed_password,
-            "is_verified": False,
-            "otp": otp
-        }).execute()
-        
-        await send_otp_email(admin.email, otp)
-        logger.info(f"Admin registered: {admin.email}, OTP sent")
-        return {"message": "Admin registered, OTP sent to email"}
-    except Exception as e:
-        logger.error(f"Error registering admin: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to register admin")
+    return await register_admin(admin)
 
 @router.post("/verify-otp")
 async def verify_otp(otp_data: OTPVerify):
