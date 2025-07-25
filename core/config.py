@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     EMAIL_PORT: int = 587
     EMAIL_USER: str
     EMAIL_PASSWORD: str
-    EMAIL_USE_TLS: bool = True
     
     # Face Recognition Configuration
     FACE_RECOGNITION_THRESHOLD: float = 0.6
@@ -60,10 +59,9 @@ class Settings(BaseSettings):
             self.SECRET_KEY = self.JWT_SECRET
             logger.warning("Using legacy JWT_SECRET. Please rename to SECRET_KEY in your .env file")
         
-        # Set default SUPABASE_ANON_KEY if not provided (for backward compatibility)
+        # Set default SUPABASE_ANON_KEY if not provided
         if not self.SUPABASE_ANON_KEY:
             logger.warning("SUPABASE_ANON_KEY not set. Some features may not work correctly.")
-            # You can set a placeholder or fetch from environment
             self.SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
         
     def _validate_required_settings(self):
@@ -103,6 +101,10 @@ class Settings(BaseSettings):
         # Validate Supabase URL format
         if not self.SUPABASE_URL.startswith('https://'):
             raise ValueError("SUPABASE_URL must start with https://")
+            
+        # Validate email port
+        if self.EMAIL_PORT not in [587, 465]:
+            raise ValueError("EMAIL_PORT must be either 587 (STARTTLS) or 465 (SSL/TLS)")
             
         logger.info("Configuration validated successfully")
 
