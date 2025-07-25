@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from uuid import UUID
 
 class AdminUserBase(BaseModel):
     """Base schema for admin user data."""
@@ -16,7 +17,7 @@ class AdminUserUpdate(BaseModel):
 
 class AdminUser(AdminUserBase):
     """Schema for returning admin user data."""
-    id: int
+    id: UUID
     is_verified: bool
     created_at: str
 
