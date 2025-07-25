@@ -10,6 +10,7 @@ from api.dependencies import get_current_admin
 from models.database import supabase
 from typing import List, Optional, Dict
 from uuid import UUID
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,10 @@ async def get_admin_stats(_=Depends(get_current_admin)):
     try:
         student_count = len(await get_all_students())
         log_count = len(await get_recognition_logs())
-        recent_logs = await get_recognition_logs(start_date="now() - interval '7 days'")
+        
+        # Calculate date 7 days ago
+        seven_days_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
+        recent_logs = await get_recognition_logs(start_date=seven_days_ago)
         
         stats = {
             "total_students": student_count,
