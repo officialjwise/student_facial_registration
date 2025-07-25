@@ -1,17 +1,41 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from uuid import UUID, uuid4
 from models.database import supabase
-from schemas.admin_users import AdminUserCreate, AdminUserUpdate, AdminUser
 from core.security import get_password_hash
 from fastapi import HTTPException, status
-from typing import List, Optional
-from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
 
+class AdminUserBase(BaseModel):
+    """Base schema for admin user data."""
+    email: EmailStr
+
+class AdminUserCreate(AdminUserBase):
+    """Schema for creating an admin user."""
+    password: str
+
+class AdminUserUpdate(BaseModel):
+    """Schema for updating an admin user."""
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+
+class AdminUser(AdminUserBase):
+    """Schema for returning admin user data."""
+    id: UUID
+    is_verified: bool
+    otp: Optional[str] = None
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 async def create_admin_user(admin: AdminUserCreate) -> AdminUser:
-    """Create a new admin user."""
+    """Create a new admin user with UUID."""
     try:
         data = admin.model_dump()
+        data["id"] = str(uuid4())  # Explicitly generate UUID
         data["hashed_password"] = get_password_hash(data.pop("password"))
         data["is_verified"] = False
         response = supabase.table("admin_users").insert(data).execute()
