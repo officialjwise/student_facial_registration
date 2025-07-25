@@ -34,24 +34,31 @@ def _check_face_recognition_availability():
             detail="Face recognition service is not available. Please install face_recognition_models."
         )
 
-def _validate_image_data(image_data: bytes) -> bool:
+def _validate_image_data(image_data: bytes) -> Tuple[bool, str]:
     """Validate image data format and size."""
     try:
-        if len(image_data) == 0:
-            return False
+        if not image_data:
+            return False, "Empty image data provided"
         
         # Try to open the image with PIL to validate format
-        with Image.open(BytesIO(image_data)) as img:
-            # Check if image is too large (> 10MB)
-            if len(image_data) > 10 * 1024 * 1024:
-                return False
-            # Check minimum dimensions
-            if img.size[0] < 100 or img.size[1] < 100:
-                return False
-        return True
+        try:
+            with Image.open(BytesIO(image_data)) as img:
+                # Check if image is too large (> 10MB)
+                if len(image_data) > 10 * 1024 * 1024:
+                    return False, "Image size too large. Maximum size is 10MB"
+                # Check minimum dimensions
+                if img.size[0] < 100 or img.size[1] < 100:
+                    return False, "Image dimensions too small. Minimum size is 100x100 pixels"
+                # Validate image format
+                if img.format.lower() not in ['jpeg', 'jpg', 'png']:
+                    return False, "Invalid image format. Only JPEG and PNG are supported"
+                return True, ""
+        except Exception as e:
+            return False, f"Invalid image format: {str(e)}"
+            
     except Exception as e:
-        logger.error(f"Image validation failed: {str(e)}")
-        return False
+        logger.warning(f"Invalid image data: {str(e)}")
+        return False, "Invalid image data provided"
 
 def _extract_face_embedding_sync(image_data: bytes) -> Optional[np.ndarray]:
     """Synchronous face embedding extraction (runs in thread pool)."""
@@ -88,24 +95,56 @@ def _extract_face_embedding_sync(image_data: bytes) -> Optional[np.ndarray]:
         raise
 
 async def extract_face_embedding(image_data: bytes) -> Optional[np.ndarray]:
-    """Extract facial embedding from an image asynchronously."""
+    """Extract facial embedding from image data."""
     _check_face_recognition_availability()
     
-    try:
-        # Run the CPU-intensive task in a thread pool
-        loop = asyncio.get_event_loop()
-        embedding = await loop.run_in_executor(
-            face_recognition_executor,
-            _extract_face_embedding_sync,
-            image_data
-        )
-        return embedding
-        
-    except Exception as e:
-        logger.error(f"Error in async face embedding extraction: {str(e)}")
+    # Validate image data
+    is_valid, error_message = _validate_image_data(image_data)
+    if not is_valid:
+        logger.warning(f"Invalid image data: {error_message}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to process image for face recognition"
+            detail=error_message
+        )
+
+    try:
+        # Load the image and get face encoding
+        img = face_recognition.load_image_file(BytesIO(image_data))
+        face_locations = await asyncio.get_event_loop().run_in_executor(
+            face_recognition_executor, face_recognition.face_locations, img
+        )
+        
+        if not face_locations:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No face detected in the image"
+            )
+            
+        if len(face_locations) > 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Multiple faces detected in the image. Please provide an image with a single face"
+            )
+
+        face_encodings = await asyncio.get_event_loop().run_in_executor(
+            face_recognition_executor, face_recognition.face_encodings, img, face_locations
+        )
+        
+        if not face_encodings:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Could not extract facial features. Please provide a clearer image"
+            )
+            
+        return face_encodings[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Face recognition error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process the image. Please try again with a different image"
         )
 
 def _recognize_face_sync(embedding: np.ndarray, stored_embeddings: list) -> Optional[Tuple[int, float]]:
