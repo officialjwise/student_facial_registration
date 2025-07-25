@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.colleges import CollegeCreate, CollegeUpdate, College
+from schemas.responses import HTTPResponse
 from crud.colleges import create_college, get_college_by_id, get_all_colleges, update_college, delete_college
 from api.dependencies import get_current_admin
 from uuid import UUID
@@ -10,31 +11,57 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/colleges", tags=["Colleges"])
 
-@router.post("/", response_model=College, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=HTTPResponse[College], status_code=status.HTTP_201_CREATED)
 async def create_new_college(college: CollegeCreate, _=Depends(get_current_admin)):
     """Create a new college."""
-    return await create_college(college)
+    result = await create_college(college)
+    return HTTPResponse(
+        message="College created successfully",
+        status_code=status.HTTP_201_CREATED,
+        count=1,
+        data=[result]
+    )
 
-@router.get("/{college_id}", response_model=College)
+@router.get("/{college_id}", response_model=HTTPResponse[College])
 async def get_college(college_id: UUID, _=Depends(get_current_admin)):
     """Retrieve a college by ID."""
-    college = await get_college_by_id(college_id)
-    if not college:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="College not found")
-    return college
+    result = await get_college_by_id(college_id)
+    return HTTPResponse(
+        message="College retrieved successfully",
+        status_code=status.HTTP_200_OK,
+        count=1,
+        data=[result]
+    )
 
-@router.get("/", response_model=List[College])
+@router.get("/", response_model=HTTPResponse[College])
 async def list_colleges():
     """Retrieve all colleges."""
-    return await get_all_colleges()
+    result = await get_all_colleges()
+    return HTTPResponse(
+        message="Colleges retrieved successfully",
+        status_code=status.HTTP_200_OK,
+        count=len(result),
+        data=result
+    )
 
-@router.put("/{college_id}", response_model=College)
+@router.put("/{college_id}", response_model=HTTPResponse[College])
 async def update_college_details(college_id: UUID, college: CollegeUpdate, _=Depends(get_current_admin)):
     """Update a college's details."""
-    return await update_college(college_id, college)
+    result = await update_college(college_id, college)
+    return HTTPResponse(
+        message="College updated successfully",
+        status_code=status.HTTP_200_OK,
+        count=1,
+        data=[result]
+    )
 
-@router.delete("/{college_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{college_id}", response_model=HTTPResponse[None])
 async def delete_college_record(college_id: UUID, _=Depends(get_current_admin)):
     """Delete a college by ID."""
     await delete_college(college_id)
-    return None
+    return HTTPResponse(
+        message="College deleted successfully",
+        status_code=status.HTTP_204_NO_CONTENT,
+        count=0,
+        data=None
+    )

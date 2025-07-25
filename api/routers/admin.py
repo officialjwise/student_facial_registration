@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.students import Student
 from schemas.recognition_logs import RecognitionLog
 from schemas.admin_users import AdminUser, AdminUserUpdate
+from schemas.responses import HTTPResponse
 from crud.students import get_all_students
 from crud.recognition_logs import get_recognition_logs
 from crud.admin_users import update_admin_user, delete_admin_user
 from api.dependencies import get_current_admin
 from models.database import supabase
-from typing import List, Optional
+from typing import List, Optional, Dict
 from uuid import UUID
 import logging
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-@router.get("/stats")
+@router.get("/stats", response_model=HTTPResponse[Dict])
 async def get_admin_stats(_=Depends(get_current_admin)):
     """Retrieve admin dashboard statistics."""
     try:
@@ -23,22 +24,35 @@ async def get_admin_stats(_=Depends(get_current_admin)):
         log_count = len(await get_recognition_logs())
         recent_logs = await get_recognition_logs(start_date="now() - interval '7 days'")
         
-        logger.info("Admin stats retrieved")
-        return {
+        stats = {
             "total_students": student_count,
             "total_recognitions": log_count,
             "recent_recognitions": len(recent_logs)
         }
+        
+        logger.info("Admin stats retrieved")
+        return HTTPResponse(
+            message="Admin statistics retrieved successfully",
+            status_code=status.HTTP_200_OK,
+            count=1,
+            data=[stats]
+        )
     except Exception as e:
         logger.error(f"Error retrieving admin stats: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve stats")
 
-@router.get("/students", response_model=List[Student])
+@router.get("/students", response_model=HTTPResponse[Student])
 async def list_all_students(_=Depends(get_current_admin)):
     """Retrieve all students for admin."""
-    return await get_all_students()
+    result = await get_all_students()
+    return HTTPResponse(
+        message="All students retrieved successfully",
+        status_code=status.HTTP_200_OK,
+        count=len(result),
+        data=result
+    )
 
-@router.get("/recognition-logs", response_model=List[RecognitionLog])
+@router.get("/recognition-logs", response_model=HTTPResponse[RecognitionLog])
 async def list_recognition_logs(
     student_id: Optional[UUID] = None,
     start_date: Optional[str] = None,
@@ -46,19 +60,36 @@ async def list_recognition_logs(
     _=Depends(get_current_admin)
 ):
     """Retrieve recognition logs with optional filters."""
-    return await get_recognition_logs(student_id, start_date, end_date)
+    result = await get_recognition_logs(student_id, start_date, end_date)
+    message = "Recognition logs retrieved successfully"
+    if student_id:
+        message = f"Recognition logs for student {student_id} retrieved successfully"
+    
+    return HTTPResponse(
+        message=message,
+        status_code=status.HTTP_200_OK,
+        count=len(result),
+        data=result
+    )
 
-@router.put("/profile/{admin_id}", response_model=AdminUser)
-async def update_admin_profile(admin_id: UUID, admin: AdminUserUpdate, current_admin=Depends(get_current_admin)):
-    """Update admin profile."""
-    if current_admin["id"] != str(admin_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update other admin's profile")
-    return await update_admin_user(admin_id, admin)
+@router.put("/{admin_id}", response_model=HTTPResponse[AdminUser])
+async def update_admin_details(admin_id: UUID, admin: AdminUserUpdate, _=Depends(get_current_admin)):
+    """Update an admin user's details."""
+    result = await update_admin_user(admin_id, admin)
+    return HTTPResponse(
+        message="Admin user updated successfully",
+        status_code=status.HTTP_200_OK,
+        count=1,
+        data=[result]
+    )
 
-@router.delete("/profile/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_admin_profile(admin_id: UUID, current_admin=Depends(get_current_admin)):
-    """Delete admin profile."""
-    if current_admin["id"] != str(admin_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete other admin's profile")
+@router.delete("/{admin_id}", response_model=HTTPResponse[None])
+async def delete_admin_user_record(admin_id: UUID, _=Depends(get_current_admin)):
+    """Delete an admin user by ID."""
     await delete_admin_user(admin_id)
-    return None
+    return HTTPResponse(
+        message="Admin user deleted successfully",
+        status_code=status.HTTP_204_NO_CONTENT,
+        count=0,
+        data=None
+    )
