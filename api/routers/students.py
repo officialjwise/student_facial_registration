@@ -8,6 +8,7 @@ from api.dependencies import get_current_admin
 from typing import List
 from uuid import UUID
 import base64
+import binascii
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,10 +21,35 @@ async def register_student(student: StudentCreate, _=Depends(get_current_admin))
     try:
         # Validate face image
         try:
-            image_data = base64.b64decode(student.face_image)
-        except Exception:
+            if not student.face_image:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Face image is required."
+                )
+            
+            # Check if the base64 string has the proper prefix
+            face_image_data = student.face_image
+            if face_image_data.startswith('data:image/'):
+                # Remove data URL prefix if present
+                face_image_data = face_image_data.split(',', 1)[-1]
+            
+            image_data = base64.b64decode(face_image_data)
+            
+            if len(image_data) == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Empty image data provided."
+                )
+                
+        except binascii.Error:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid base64 image format. Please ensure the image is properly base64 encoded."
+            )
+        except Exception as e:
+            logger.error(f"Error processing face image: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid face image format. Image must be base64 encoded."
             )
 
@@ -127,23 +153,31 @@ async def recognize_student(image: UploadFile = File(...)):
     """Recognize a student from an uploaded face image."""
     try:
         # Validate file type
-        if not image.content_type.startswith('image/'):
+        if not image.content_type or not image.content_type.startswith('image/'):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file type. Please upload an image file"
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid file type. Please upload an image file (JPEG or PNG)"
+            )
+            
+        # Validate file size (max 10MB)
+        if hasattr(image, 'size') and image.size > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="File too large. Maximum size is 10MB"
             )
             
         # Read image contents
         try:
             contents = await image.read()
-            if not contents:
+            if not contents or len(contents) == 0:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail="Empty image file provided"
                 )
         except Exception as e:
+            logger.error(f"Error reading image file: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Error reading image file: {str(e)}"
             )
 
