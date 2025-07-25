@@ -20,6 +20,7 @@ except ImportError as e:
 
 from core.config import settings
 from core.supabase import supabase
+from crud.students import get_student_by_id
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +47,11 @@ def _validate_image_data(image_data: bytes) -> Tuple[bool, str]:
                 # Check if image is too large (> 10MB)
                 if len(image_data) > 10 * 1024 * 1024:
                     return False, "Image size too large. Maximum size is 10MB"
-                # Check minimum dimensions
-                if img.size[0] < 100 or img.size[1] < 100:
-                    return False, "Image dimensions too small. Minimum size is 100x100 pixels"
+                # Check minimum dimensions - face_recognition works well with images as small as 50x50
+                if img.size[0] < 50 or img.size[1] < 50:
+                    return False, "Image dimensions too small. Minimum size is 50x50 pixels"
                 # Validate image format
-                if img.format.lower() not in ['jpeg', 'jpg', 'png']:
+                if hasattr(img, 'format') and img.format and img.format.lower() not in ['jpeg', 'jpg', 'png']:
                     return False, "Invalid image format. Only JPEG and PNG are supported"
                 return True, ""
         except Exception as e:
@@ -63,8 +64,9 @@ def _validate_image_data(image_data: bytes) -> Tuple[bool, str]:
 def _extract_face_embedding_sync(image_data: bytes) -> Optional[np.ndarray]:
     """Synchronous face embedding extraction (runs in thread pool)."""
     try:
-        if not _validate_image_data(image_data):
-            logger.warning("Invalid image data provided")
+        is_valid, error_message = _validate_image_data(image_data)
+        if not is_valid:
+            logger.warning(f"Invalid image data: {error_message}")
             return None
             
         # Load image from bytes
@@ -177,8 +179,8 @@ def _recognize_face_sync(embedding: np.ndarray, stored_embeddings: list) -> Opti
         logger.error(f"Error during face recognition comparison: {str(e)}")
         raise
 
-async def recognize_face(image_data: bytes) -> Optional[Tuple[int, float]]:
-    """Recognize a face by comparing it to stored embeddings."""
+async def recognize_face(image_data: bytes):
+    """Recognize a face by comparing it to stored embeddings and return the student."""
     _check_face_recognition_availability()
     
     try:
@@ -222,7 +224,13 @@ async def recognize_face(image_data: bytes) -> Optional[Tuple[int, float]]:
             stored_embeddings
         )
         
-        return result
+        if result:
+            student_id, distance = result
+            # Get the full student record
+            student = await get_student_by_id(UUID(student_id))
+            return student
+        
+        return None
         
     except HTTPException:
         raise
