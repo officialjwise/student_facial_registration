@@ -27,7 +27,7 @@ def custom_openapi():
         title="🎓 KNUST Student System API",
         version="1.0.0",
         description="""
-## 🎯 KNUST Student Registration and Recognition System
+## � KNUST Student Registration and Recognition System
 
 A comprehensive RESTful API for student registration, facial recognition, and administrative management.
 
@@ -48,6 +48,81 @@ A comprehensive RESTful API for student registration, facial recognition, and ad
 - 🔒 **Protected**: Admin operations, student management
 
 ### 📱 Response Format
+```json
+{
+  "message": "Success description",
+  "status_code": 200,
+  "count": 1,
+  "data": [/* response data */]
+}
+```
+        """,
+        routes=app.routes,
+    )
+        
+        <div class="auth-reminder">
+            💡 <strong>Quick Start:</strong> Register → Verify → Login → Click "🔒 Authorize" → Test!
+        </div>api.utils import get_openapi
+from fastapi.security import HTTPBearer
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from api.routers import students, auth, admin, colleges, departments
+from contextlib import asynccontextmanager
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application startup")
+    yield
+    # You can add shutdown logic here if needed
+
+# Custom OpenAPI schema
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title="🎓 KNUST Student System API",
+        version="1.0.0",
+        description="""
+## 🎯 KNUST Student Registration and Recognition System
+
+A comprehensive RESTful API for student registration, facial recognition, and administrative management.
+
+### � Development Team
+
+**Group Members:**
+1. **Festus Mensah** - 8556221
+2. **Eleanor Annang** - 8534421  
+3. **Silas Amoakowah Ofosu** - 8532621
+
+### 🔐 Authentication
+- Use JWT Bearer tokens for protected endpoints
+- Click 🔒 **Authorize** button and enter: `Bearer YOUR_TOKEN`
+- Get tokens via `/auth/login` or `/auth/login-otp` → `/auth/verify-login-otp`
+
+### � Token Management
+- **Access Token**: Expires in 30 minutes
+- **Refresh Token**: Expires in 7 days  
+- Use `POST /auth/refresh` to get new tokens before expiry
+
+### 📋 Endpoint Types
+- 🔓 **Public Endpoints**: No authentication required
+  - Student registration, face recognition, view colleges/departments
+- 🔒 **Protected Endpoints**: Require JWT token
+  - Admin dashboard, student management, CRUD operations
+
+### 🚀 Quick Test Sequence
+1. Register → Verify → Login → Authorize → Test!
+2. Try public endpoints first (no auth needed)
+3. Test protected endpoints after authorization
+
+### 📱 Response Format
+All endpoints return standardized JSON responses:
 ```json
 {
   "message": "Success description",
@@ -203,11 +278,11 @@ def custom_swagger_ui_html():
         <div class="custom-banner">
             🎓 KNUST Student Registration & Recognition System API
             <br>
-            <small>Developed by: Festus Mensah, Eleanor Annang, Silas Amoakowah Ofosu</small>
+            <small>Comprehensive documentation with interactive testing</small>
         </div>
         
         <div class="auth-reminder">
-            💡 <strong>Quick Start:</strong> Register → Verify → Login → Click "🔒 Authorize" → Test!
+            💡 <strong>Quick Start:</strong> Register → Verify → Login → Click "🔒 Authorize" → Test endpoints!
         </div>
         
         <div id="swagger-ui"></div>

@@ -15,9 +15,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["👤 Admin"])
 
-@router.get("/stats", response_model=HTTPResponse[Dict])
+@router.get("/stats", response_model=HTTPResponse[Dict], 
+            summary="Admin Dashboard Stats", description="Get dashboard statistics (Admin only)")
 async def get_admin_stats(_=Depends(get_current_admin)):
     """Retrieve admin dashboard statistics."""
     try:
@@ -45,7 +46,8 @@ async def get_admin_stats(_=Depends(get_current_admin)):
         logger.error(f"Error retrieving admin stats: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve stats")
 
-@router.get("/students", response_model=HTTPResponse[Student])
+@router.get("/students", response_model=HTTPResponse[Student],
+            summary="List All Students (Admin)", description="Get all students for admin dashboard")
 async def list_all_students(_=Depends(get_current_admin)):
     """Retrieve all students for admin."""
     result = await get_all_students()
@@ -56,7 +58,8 @@ async def list_all_students(_=Depends(get_current_admin)):
         data=result
     )
 
-@router.get("/recognition-logs", response_model=HTTPResponse[RecognitionLog])
+@router.get("/recognition-logs", response_model=HTTPResponse[RecognitionLog],
+            summary="Get Recognition Logs", description="Get recognition logs with optional filters (Admin only)")
 async def list_recognition_logs(
     student_id: Optional[UUID] = None,
     start_date: Optional[str] = None,

@@ -13,10 +13,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/students", tags=["Students"])
+router = APIRouter(prefix="/students", tags=["🎓 Students"])
 
 @router.post("/", response_model=HTTPResponse[Student], status_code=status.HTTP_201_CREATED)
-async def register_student(student: StudentCreate, _=Depends(get_current_admin)):
+async def register_student(student: StudentCreate):
     """Register a new student with facial embedding."""
     try:
         # Validate face image
@@ -68,6 +68,7 @@ async def register_student(student: StudentCreate, _=Depends(get_current_admin))
             status_code=status.HTTP_201_CREATED,
             count=1,
             data=[student_record]
+            
         )
     except HTTPException:
         raise
@@ -100,6 +101,94 @@ async def register_student(student: StudentCreate, _=Depends(get_current_admin))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to register student. Please try again."
+        )
+
+@router.post("/admin/create", response_model=HTTPResponse[Student], status_code=status.HTTP_201_CREATED)
+async def admin_create_student(student: StudentCreate, _=Depends(get_current_admin)):
+    """Admin endpoint to register a new student with facial embedding."""
+    try:
+        # Validate face image
+        try:
+            if not student.face_image:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Face image is required."
+                )
+            
+            # Check if the base64 string has the proper prefix
+            face_image_data = student.face_image
+            if face_image_data.startswith('data:image/'):
+                # Remove data URL prefix if present
+                face_image_data = face_image_data.split(',', 1)[-1]
+            
+            image_data = base64.b64decode(face_image_data)
+            
+            if len(image_data) == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Empty image data provided."
+                )
+                
+        except binascii.Error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid base64 image format. Please ensure the image is properly base64 encoded."
+            )
+        except Exception as e:
+            logger.error(f"Error processing face image: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid face image format. Image must be base64 encoded."
+            )
+
+        # Extract face embedding
+        embedding = await extract_face_embedding(image_data)
+        if not embedding:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No face detected in the uploaded image. Please provide a clear photo with a face."
+            )
+        
+        # Create student record
+        student_record = await create_student(student, embedding.tolist())
+        return HTTPResponse(
+            message="Student created successfully by admin",
+            status_code=status.HTTP_201_CREATED,
+            count=1,
+            data=[student_record]
+            
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        # Handle validation errors
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    except Exception as e:
+        error_msg = str(e)
+        if "duplicate key" in error_msg.lower():
+            if "students_student_id_key" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"A student with ID {student.student_id} already exists"
+                )
+            elif "students_index_number_key" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"A student with index number {student.index_number} already exists"
+                )
+            elif "students_email_key" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"A student with email {student.email} already exists"
+                )
+        
+        logger.error(f"Error creating student: {error_msg}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create student. Please try again."
         )
 
 @router.get("/{student_id}", response_model=HTTPResponse[Student])

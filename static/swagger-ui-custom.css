@@ -1,0 +1,315 @@
+/* Custom Swagger UI Styling for KNUST Student System */
+
+/* Main theme colors */
+:root {
+  --knust-primary: #1e40af;
+  --knust-secondary: #059669;
+  --knust-accent: #dc2626;
+  --knust-gold: #f59e0b;
+  --knust-dark: #1f2937;
+  --knust-light: #f9fafb;
+}
+
+/* Header styling */
+.swagger-ui .topbar {
+  background: linear-gradient(135deg, var(--knust-primary) 0%, var(--knust-secondary) 100%);
+  padding: 10px 0;
+  border-bottom: 3px solid var(--knust-gold);
+}
+
+.swagger-ui .topbar .download-url-wrapper {
+  display: none;
+}
+
+/* Main title */
+.swagger-ui .info .title {
+  color: var(--knust-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Description styling */
+.swagger-ui .info .description {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid var(--knust-primary);
+  margin: 20px 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Tag sections */
+.swagger-ui .opblock-tag {
+  background: linear-gradient(135deg, var(--knust-primary) 0%, var(--knust-secondary) 100%);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.swagger-ui .opblock-tag:hover {
+  background: linear-gradient(135deg, var(--knust-secondary) 0%, var(--knust-primary) 100%);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Operation blocks */
+.swagger-ui .opblock {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin: 10px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.swagger-ui .opblock:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* HTTP methods */
+.swagger-ui .opblock.opblock-post {
+  border-left: 4px solid var(--knust-secondary);
+  background: rgba(5, 150, 105, 0.05);
+}
+
+.swagger-ui .opblock.opblock-get {
+  border-left: 4px solid var(--knust-primary);
+  background: rgba(30, 64, 175, 0.05);
+}
+
+.swagger-ui .opblock.opblock-put {
+  border-left: 4px solid var(--knust-gold);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.swagger-ui .opblock.opblock-delete {
+  border-left: 4px solid var(--knust-accent);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+/* Method labels */
+.swagger-ui .opblock .opblock-summary-method {
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+/* Authorization section */
+.swagger-ui .auth-wrapper {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid var(--knust-gold);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.swagger-ui .auth-btn-wrapper {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.swagger-ui .btn.authorize {
+  background: linear-gradient(135deg, var(--knust-primary) 0%, var(--knust-secondary) 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.swagger-ui .btn.authorize:hover {
+  background: linear-gradient(135deg, var(--knust-secondary) 0%, var(--knust-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Response codes */
+.swagger-ui .responses-inner h4 {
+  color: var(--knust-primary);
+  font-weight: 600;
+}
+
+.swagger-ui .response-col_status {
+  color: var(--knust-secondary);
+  font-weight: 600;
+}
+
+/* Code blocks */
+.swagger-ui .highlight-code {
+  background: var(--knust-dark);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.swagger-ui pre {
+  background: var(--knust-dark);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #374151;
+}
+
+/* Parameters */
+.swagger-ui .parameters-col_description p {
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.swagger-ui .parameter__name {
+  color: var(--knust-primary);
+  font-weight: 600;
+}
+
+/* Try it out button */
+.swagger-ui .btn.try-out__btn {
+  background: var(--knust-secondary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.swagger-ui .btn.try-out__btn:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+/* Execute button */
+.swagger-ui .btn.execute {
+  background: linear-gradient(135deg, var(--knust-accent) 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.swagger-ui .btn.execute:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+}
+
+/* Custom badges for public/protected endpoints */
+.swagger-ui .opblock-summary::after {
+  content: "🔒 Protected";
+  background: var(--knust-accent);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 10px;
+  float: right;
+}
+
+/* Override for public endpoints */
+.swagger-ui .opblock[data-tag="🔐 Authentication"] .opblock-summary::after,
+.swagger-ui .opblock[data-tag="🎓 Students"] .opblock-summary[data-path="/students/"] .opblock-summary::after,
+.swagger-ui .opblock[data-tag="🎓 Students"] .opblock-summary[data-path="/students/recognize"] .opblock-summary::after,
+.swagger-ui .opblock[data-tag="🏫 Colleges"] .opblock-summary[data-path="/colleges/"][data-method="get"] .opblock-summary::after,
+.swagger-ui .opblock[data-tag="🏛️ Departments"] .opblock-summary[data-path="/departments/"][data-method="get"] .opblock-summary::after,
+.swagger-ui .opblock[data-tag="❤️ Health"] .opblock-summary::after {
+  content: "🔓 Public";
+  background: var(--knust-secondary);
+}
+
+/* Loading spinner */
+.swagger-ui .loading-container {
+  background: linear-gradient(45deg, var(--knust-primary), var(--knust-secondary));
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--knust-primary) 0%, var(--knust-secondary) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--knust-secondary) 0%, var(--knust-primary) 100%);
+}
+
+/* Custom animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.swagger-ui .opblock {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .swagger-ui .info .title {
+    font-size: 2rem;
+  }
+  
+  .swagger-ui .opblock-tag {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .swagger-ui .btn.authorize {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Add some custom KNUST branding */
+.swagger-ui .info::before {
+  content: "🎓";
+  font-size: 3rem;
+  display: block;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Success/Error message styling */
+.swagger-ui .response .response-col_status.response-col_status-200 {
+  color: var(--knust-secondary);
+  font-weight: 700;
+}
+
+.swagger-ui .response .response-col_status.response-col_status-201 {
+  color: var(--knust-secondary);
+  font-weight: 700;
+}
+
+.swagger-ui .response .response-col_status.response-col_status-400,
+.swagger-ui .response .response-col_status.response-col_status-401,
+.swagger-ui .response .response-col_status.response-col_status-403,
+.swagger-ui .response .response-col_status.response-col_status-404,
+.swagger-ui .response .response-col_status.response-col_status-500 {
+  color: var(--knust-accent);
+  font-weight: 700;
+}

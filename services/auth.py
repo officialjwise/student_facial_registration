@@ -223,6 +223,79 @@ async def verify_admin_otp(email: EmailStr, provided_otp: str) -> bool:
         logger.error(f"Error verifying OTP: {str(e)}")
         return False
 
+async def generate_login_otp(email: EmailStr, password: str) -> dict:
+    """Generate OTP for admin login after password verification."""
+    logger.debug(f"Generating login OTP for email: {email}")
+    
+    try:
+        # Get admin user
+        admin_user = await get_admin_user_by_email(email)
+        if not admin_user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        
+        # Check if admin is verified
+        if not admin_user.get("is_verified"):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account not verified")
+        
+        # Verify password
+        from core.security import verify_password
+        if not verify_password(password, admin_user["hashed_password"]):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        
+        # Generate OTP
+        otp_secret = generate_otp_secret()
+        totp = pyotp.TOTP(otp_secret)
+        otp_code = totp.now()
+        
+        # Store OTP data for login
+        otp_stored = await store_otp_data_for_admin(email, otp_secret, otp_code)
+        if not otp_stored:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate login OTP")
+        
+        # Send OTP email
+        await send_otp_email(email, otp_code)
+        
+        return {
+            "message": "Login OTP sent to email",
+            "email": email,
+            "status": "otp_required"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating login OTP: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate login OTP")
+
+async def verify_login_otp(email: EmailStr, provided_otp: str) -> dict:
+    """Verify login OTP and return tokens."""
+    logger.debug(f"Verifying login OTP for email: {email}")
+    
+    try:
+        # Verify OTP
+        is_valid = await verify_admin_otp(email, provided_otp)
+        if not is_valid:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired OTP")
+        
+        # Generate tokens
+        from core.security import create_access_token, create_refresh_token
+        
+        access_token = create_access_token(data={"sub": email})
+        refresh_token = create_refresh_token(data={"sub": email})
+        
+        logger.info(f"Admin logged in successfully: {email}")
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying login OTP: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Login verification failed")
+
 # Cleanup function for graceful shutdown
 def cleanup_auth_service():
     """Cleanup auth service resources."""

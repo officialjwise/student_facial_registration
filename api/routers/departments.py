@@ -9,7 +9,7 @@ from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/departments", tags=["Departments"])
+router = APIRouter(prefix="/departments", tags=["🏛️ Departments"])
 
 @router.post("/", response_model=HTTPResponse[Department], status_code=status.HTTP_201_CREATED)
 async def create_new_department(department: DepartmentCreate, _=Depends(get_current_admin)):

@@ -17,6 +17,22 @@ class AdminLogin(BaseModel):
     email: EmailStr
     password: str
 
+class AdminLoginOTP(BaseModel):
+    """Schema for admin login OTP request."""
+    email: EmailStr
+    password: str
+
+class LoginOTPVerify(BaseModel):
+    """Schema for login OTP verification."""
+    email: EmailStr
+    otp: str
+
+    @validator("otp")
+    def validate_otp(cls, v):
+        if not v.isdigit() or len(v) != 6:
+            raise ValueError("OTP must be a 6-digit number")
+        return v
+
 class OTPVerify(BaseModel):
     """Schema for OTP verification."""
     email: EmailStr
@@ -31,4 +47,9 @@ class OTPVerify(BaseModel):
 class Token(BaseModel):
     """Schema for JWT token response."""
     access_token: str
+    refresh_token: str
     token_type: str
+
+class RefreshTokenRequest(BaseModel):
+    """Schema for refresh token request."""
+    refresh_token: str
