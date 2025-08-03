@@ -33,7 +33,10 @@ async def create_department(department: DepartmentCreate) -> Department:
         if not response.data:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create department")
         logger.info(f"Created department: {department.name}")
-        return Department(**response.data[0])
+        
+        # Return created department with college name
+        created_dept_id = response.data[0]['id']
+        return await get_department_by_id(UUID(created_dept_id))
     except HTTPException:
         raise
     except Exception as e:
@@ -47,30 +50,73 @@ async def create_department(department: DepartmentCreate) -> Department:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 async def get_department_by_id(department_id: UUID) -> Optional[Department]:
-    """Retrieve a department by ID."""
+    """Retrieve a department by ID with college name."""
     try:
         response = supabase.table("departments").select("*").eq("id", str(department_id)).execute()
+        
         if response.data:
-            return Department(**response.data[0])
+            dept_data = response.data[0]
+            # Get college name
+            college_name = None
+            if dept_data.get('college_id'):
+                college_response = supabase.table("colleges").select("name").eq("id", dept_data['college_id']).execute()
+                if college_response.data:
+                    college_name = college_response.data[0]['name']
+            
+            # Create department object with college name
+            dept_dict = dict(dept_data)
+            dept_dict['college_name'] = college_name
+            return Department(**dept_dict)
         return None
     except Exception as e:
         logger.error(f"Error retrieving department {department_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 async def get_departments_by_college(college_id: UUID) -> List[Department]:
-    """Retrieve all departments for a college."""
+    """Retrieve all departments for a college with college names."""
     try:
         response = supabase.table("departments").select("*").eq("college_id", str(college_id)).execute()
-        return [Department(**department) for department in response.data]
+        
+        departments = []
+        for dept_data in response.data:
+            # Get college name
+            college_name = None
+            if dept_data.get('college_id'):
+                college_response = supabase.table("colleges").select("name").eq("id", dept_data['college_id']).execute()
+                if college_response.data:
+                    college_name = college_response.data[0]['name']
+            
+            # Create department object with college name
+            dept_dict = dict(dept_data)
+            dept_dict['college_name'] = college_name
+            departments.append(Department(**dept_dict))
+        
+        return departments
     except Exception as e:
         logger.error(f"Error retrieving departments for college {college_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 async def get_all_departments() -> List[Department]:
-    """Retrieve all departments."""
+    """Retrieve all departments with college names."""
     try:
+        # First get all departments
         response = supabase.table("departments").select("*").execute()
-        return [Department(**department) for department in response.data]
+        
+        departments = []
+        for dept_data in response.data:
+            # Get college name for each department
+            college_name = None
+            if dept_data.get('college_id'):
+                college_response = supabase.table("colleges").select("name").eq("id", dept_data['college_id']).execute()
+                if college_response.data:
+                    college_name = college_response.data[0]['name']
+            
+            # Create department object with college name
+            dept_dict = dict(dept_data)
+            dept_dict['college_name'] = college_name
+            departments.append(Department(**dept_dict))
+        
+        return departments
     except Exception as e:
         logger.error(f"Error retrieving departments: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
@@ -104,7 +150,10 @@ async def update_department(department_id: UUID, department: DepartmentUpdate) -
         if not response.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
         logger.info(f"Updated department with ID: {department_id}")
-        return Department(**response.data[0])
+        
+        # Return updated department with college name
+        updated_dept = await get_department_by_id(department_id)
+        return updated_dept
     except HTTPException:
         raise
     except Exception as e:
