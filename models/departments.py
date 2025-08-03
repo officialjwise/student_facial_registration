@@ -6,6 +6,8 @@ class Department(BaseModel):
     id: Optional[UUID]
     name: str
     college_id: UUID
+    department_head: Optional[str] = None
+    description: Optional[str] = None
     created_at: Optional[str]
 
     class Config:
