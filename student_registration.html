@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNUST Student Registration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e40af 0%, #059669 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .registration-form {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        /* Photo Capture Section */
+        .photo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .photo-section h3 {
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .camera-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background: #f3f4f6;
+        }
+
+        #video {
+            width: 640px;  /* Increased to larger size */
+            height: 480px; /* Increased to larger size */
+            object-fit: cover;
+            display: block;
+        }
+
+        #canvas {
+            display: none;
+            width: 640px;  /* Matching video size */
+            height: 480px; /* Matching video size */
+        }
+
+        .captured-image {
+            width: 640px;
+            height: 480px;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #1e40af;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .submit-section {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #1e40af 0%, #059669 100%);
+            color: white;
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-submit:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .photo-status {
+            text-align: center;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .face-detected {
+            color: #059669;
+        }
+
+        .no-face-detected {
+            color: #f59e0b;
+        }
+
+            @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            #video, #canvas, .captured-image {
+                width: 90vw;
+                max-width: 450px;
+                height: calc(90vw * 0.75);
+                max-height: 338px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 KNUST Student Registration</h1>
+            <p>Register for the Student Recognition System</p>
+        </div>
+
+        <form class="registration-form" id="registrationForm">
+            <div class="form-grid">
+                <!-- Left Column - Personal Info -->
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="studentId">Student ID *</label>
+                        <input type="text" id="studentId" name="student_id" required 
+                               placeholder="e.g., 20123456">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="first_name" required 
+                               placeholder="Enter your first name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="last_name" required 
+                               placeholder="Enter your last name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="your.email@student.knust.edu.gh">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="indexNumber">Index Number *</label>
+                        <input type="text" id="indexNumber" name="index_number" required 
+                               placeholder="e.g., 2012345678">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number *</label>
+                        <input type="tel" id="phoneNumber" name="phone_number" required 
+                               placeholder="+233501234567">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth *</label>
+                        <input type="date" id="dateOfBirth" name="date_of_birth" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender *</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="program">Program *</label>
+                        <input type="text" id="program" name="program" required 
+                               placeholder="e.g., BSc Computer Science">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="level">Level *</label>
+                        <select id="level" name="level" required>
+                            <option value="">Select Level</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Right Column - Photo Capture -->
+                <div class="form-section">
+                    <div class="photo-section">
+                        <h3>Photo Capture</h3>
+                        <p style="text-align: center; color: #6b7280; margin-bottom: 15px;">
+                            Take a clear photo for face recognition (optional but recommended)<br>
+                            <small>Photo helps with automatic attendance and identification</small>
+                        </p>
+
+                        <div class="camera-container" id="cameraContainer">
+                            <video id="video" autoplay playsinline></video>
+                            <canvas id="canvas"></canvas>
+                        </div>
+
+                        <div class="photo-status" id="photoStatus">
+                            Camera not started
+                        </div>
+
+                        <div class="camera-controls">
+                            <button type="button" class="btn btn-primary" id="startCamera">
+                                📷 Start Camera
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="capturePhoto" style="display: none;">
+                                📸 Capture Photo
+                            </button>
+                            <button type="button" class="btn btn-success" id="confirmPhoto" style="display: none;">
+                                ✅ Confirm
+                            </button>
+                            <button type="button" class="btn btn-danger" id="retakePhoto" style="display: none;">
+                                ❌ Retake
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="skipPhoto">
+                                ⏭️ Skip Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="submit-section">
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        🚀 Register Student
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" style="display: none;"></div>
+    </div>
+
+    <script>
+        let stream = null;
+        let capturedImageData = null;
+        let faceDetected = false;
+
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startCameraBtn = document.getElementById('startCamera');
+        const capturePhotoBtn = document.getElementById('capturePhoto');
+        const confirmPhotoBtn = document.getElementById('confirmPhoto');
+        const retakePhotoBtn = document.getElementById('retakePhoto');
+        const skipPhotoBtn = document.getElementById('skipPhoto');
+        const photoStatus = document.getElementById('photoStatus');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('registrationForm');
+
+        // Set canvas size to match video
+        canvas.width = 640;
+        canvas.height = 480;
+
+        // Start Camera
+        startCameraBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640, min: 480 }, 
+                        height: { ideal: 480, min: 360 },
+                        facingMode: 'user'  // Front camera preferred
+                    } 
+                });
+                video.srcObject = stream;
+                
+                startCameraBtn.style.display = 'none';
+                capturePhotoBtn.style.display = 'inline-flex';
+                skipPhotoBtn.style.display = 'none';
+                photoStatus.textContent = 'Camera ready - Position yourself and click capture';
+                photoStatus.className = 'photo-status';
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showMessage('Camera access denied. You can still register without a photo.', 'warning');
+                photoStatus.textContent = 'Camera not available - Registration can proceed without photo';
+                photoStatus.className = 'photo-status no-face-detected';
+            }
+        });
+
+        // Capture Photo
+        capturePhotoBtn.addEventListener('click', () => {
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0, 640, 480);
+            
+            // Get image data
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            capturedImageData = imageDataUrl;
+            
+            // Stop video stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Hide video, show captured image
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            
+            // Update controls
+            capturePhotoBtn.style.display = 'none';
+            confirmPhotoBtn.style.display = 'inline-flex';
+            retakePhotoBtn.style.display = 'inline-flex';
+            
+            // Simulate face detection (you can replace this with actual face detection)
+            setTimeout(() => {
+                // Random face detection for demo - replace with actual detection
+                faceDetected = Math.random() > 0.3; // 70% chance of "detecting" a face
+                
+                if (faceDetected) {
+                    photoStatus.innerHTML = '✅ Face detected! Photo looks good.';
+                    photoStatus.className = 'photo-status face-detected';
+                } else {
+                    photoStatus.innerHTML = '⚠️ No face detected, but photo will still be submitted.';
+                    photoStatus.className = 'photo-status no-face-detected';
+                }
+            }, 1000);
+        });
+
+        // Confirm Photo
+        confirmPhotoBtn.addEventListener('click', () => {
+            showMessage('Photo confirmed! You can now submit the registration form.', 'success');
+            
+            // Hide camera controls
+            confirmPhotoBtn.style.display = 'none';
+            retakePhotoBtn.style.display = 'none';
+            skipPhotoBtn.style.display = 'none';
+            
+            photoStatus.innerHTML = `📷 Photo captured ${faceDetected ? 'with' : 'without'} face detection - Ready to submit!`;
+            photoStatus.className = 'photo-status';
+        });
+
+        // Retake Photo
+        retakePhotoBtn.addEventListener('click', () => {
+            // Reset everything
+            canvas.style.display = 'none';
+            video.style.display = 'block';
+            capturedImageData = null;
+            faceDetected = false;
+            
+            // Restart camera
+            startCameraBtn.click();
+            
+            confirmPhotoBtn.style.display = 'none';
+            retakePhotoBtn.style.display = 'none';
+            skipPhotoBtn.style.display = 'inline-flex';
+            
+            photoStatus.textContent = 'Restarting camera...';
+            photoStatus.className = 'photo-status';
+        });
+
+        // Skip Photo
+        skipPhotoBtn.addEventListener('click', () => {
+            // Stop any running stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Hide camera elements
+            video.style.display = 'none';
+            canvas.style.display = 'none';
+            
+            // Hide all camera controls
+            startCameraBtn.style.display = 'none';
+            capturePhotoBtn.style.display = 'none';
+            confirmPhotoBtn.style.display = 'none';
+            retakePhotoBtn.style.display = 'none';
+            skipPhotoBtn.style.display = 'none';
+            
+            // Reset photo data
+            capturedImageData = null;
+            faceDetected = false;
+            
+            // Update status
+            photoStatus.innerHTML = '⏭️ Photo skipped - Registration will proceed without photo';
+            photoStatus.className = 'photo-status no-face-detected';
+            
+            showMessage('Photo capture skipped. You can still register successfully!', 'info');
+        });
+
+        // Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Registering...';
+            
+            try {
+                // Get form data
+                const formData = new FormData(form);
+                
+                // Prepare student data
+                const studentData = {
+                    student_id: formData.get('student_id'),
+                    first_name: formData.get('first_name'),
+                    last_name: formData.get('last_name'),
+                    email: formData.get('email'),
+                    index_number: formData.get('index_number'),
+                    phone_number: formData.get('phone_number'),
+                    date_of_birth: formData.get('date_of_birth'),
+                    gender: formData.get('gender'),
+                    program: formData.get('program'),
+                    level: formData.get('level'),
+                    college_id: "123e4567-e89b-12d3-a456-426614174000", // Default college - should be loaded dynamically
+                    department_id: "223e4567-e89b-12d3-a456-426614174000" // Default department - should be loaded dynamically
+                };
+
+                // Add face image only if one was captured
+                if (capturedImageData) {
+                    studentData.face_image = capturedImageData;
+                }
+
+                console.log('Submitting student data:', studentData);
+
+                // Submit to API
+                const response = await fetch('http://localhost:8000/students/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(studentData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('🎉 Registration successful! Student has been registered.', 'success');
+                    form.reset();
+                    resetCamera();
+                } else {
+                    const errorMessage = result.detail || result.message || 'Unknown error occurred';
+                    showMessage(`❌ Registration failed: ${errorMessage}`, 'error');
+                    console.error('Registration failed:', result);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('❌ Registration failed. Please check your connection and try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Register Student';
+            }
+        });
+
+        // Utility Functions
+        function showMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function resetCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            canvas.style.display = 'none';
+            video.style.display = 'block';
+            startCameraBtn.style.display = 'inline-flex';
+            capturePhotoBtn.style.display = 'none';
+            confirmPhotoBtn.style.display = 'none';
+            retakePhotoBtn.style.display = 'none';
+            skipPhotoBtn.style.display = 'inline-flex';
+            
+            capturedImageData = null;
+            faceDetected = false;
+            photoStatus.textContent = 'Camera not started';
+            photoStatus.className = 'photo-status';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎓 KNUST Student Registration System Loaded');
+        });
+    </script>
+</body>
+</html>

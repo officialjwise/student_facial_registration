@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 KNUST Student Registration - Test Form</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1e40af;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .required {
+            color: #ef4444;
+        }
+        
+        .image-upload {
+            border: 2px dashed #d1d5db;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .image-upload:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px auto;
+            display: none;
+            border-radius: 8px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .validation-info {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .validation-info h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        
+        .validation-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .validation-info li {
+            margin-bottom: 5px;
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 KNUST Student Registration Test</h1>
+        
+        <div class="validation-info">
+            <h3>📋 Validation Requirements to Avoid HTTP 422 Errors:</h3>
+            <ul>
+                <li><strong>Student ID:</strong> Exactly 8 digits (e.g., 20240001)</li>
+                <li><strong>Index Number:</strong> Exactly 7 digits (e.g., 1234567)</li>
+                <li><strong>Email:</strong> Valid email format</li>
+                <li><strong>Image:</strong> JPEG/PNG format, max 10MB (optional)</li>
+                <li><strong>All red (*) fields are required</strong></li>
+            </ul>
+        </div>
+        
+        <form id="studentForm">
+            <div class="form-group">
+                <label for="student_id">Student ID <span class="required">*</span></label>
+                <input type="text" id="student_id" name="student_id" placeholder="20240001" maxlength="8" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="index_number">Index Number <span class="required">*</span></label>
+                <input type="text" id="index_number" name="index_number" placeholder="1234567" maxlength="7" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="first_name">First Name <span class="required">*</span></label>
+                <input type="text" id="first_name" name="first_name" placeholder="John" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="middle_name">Middle Name</label>
+                <input type="text" id="middle_name" name="middle_name" placeholder="Smith">
+            </div>
+            
+            <div class="form-group">
+                <label for="last_name">Last Name <span class="required">*</span></label>
+                <input type="text" id="last_name" name="last_name" placeholder="Doe" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="john.doe@knust.edu.gh" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="tel" id="phone_number" name="phone_number" placeholder="+233241234567">
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="college_id">College <span class="required">*</span></label>
+                <select id="college_id" name="college_id" required>
+                    <option value="">Select College</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="department_id">Department <span class="required">*</span></label>
+                <select id="department_id" name="department_id" required>
+                    <option value="">Select Department</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="program">Program</label>
+                <input type="text" id="program" name="program" placeholder="Computer Science">
+            </div>
+            
+            <div class="form-group">
+                <label for="level">Level</label>
+                <input type="text" id="level" name="level" placeholder="Level 100">
+            </div>
+            
+            <div class="form-group">
+                <label for="face_image">Face Image (Optional)</label>
+                <div class="image-upload" onclick="document.getElementById('face_image').click()">
+                    <input type="file" id="face_image" name="face_image" accept="image/*" style="display: none;">
+                    <p>📷 Click to upload face image</p>
+                    <p style="font-size: 14px; color: #6b7280;">JPEG/PNG, max 10MB</p>
+                </div>
+                <img id="imagePreview" class="image-preview" alt="Preview">
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">
+                🚀 Register Student
+            </button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let selectedImageBase64 = null;
+        
+        // Load colleges and departments
+        async function loadCollegesAndDepartments() {
+            try {
+                // Load colleges
+                const collegesResponse = await fetch(`${API_BASE}/colleges/`);
+                const collegesData = await collegesResponse.json();
+                const collegeSelect = document.getElementById('college_id');
+                
+                collegesData.data.forEach(college => {
+                    const option = document.createElement('option');
+                    option.value = college.id;
+                    option.textContent = college.name;
+                    collegeSelect.appendChild(option);
+                });
+                
+                // Load departments
+                const departmentsResponse = await fetch(`${API_BASE}/departments/`);
+                const departmentsData = await departmentsResponse.json();
+                const departmentSelect = document.getElementById('department_id');
+                
+                departmentsData.data.forEach(department => {
+                    const option = document.createElement('option');
+                    option.value = department.id;
+                    option.textContent = `${department.name} (${department.college_name})`;
+                    departmentSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading colleges/departments:', error);
+            }
+        }
+        
+        // Handle image upload
+        document.getElementById('face_image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size (10MB max)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File too large! Maximum size is 10MB.');
+                    return;
+                }
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file (JPEG or PNG).');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageBase64 = e.target.result; // This includes the data: prefix
+                    
+                    // Show preview
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = selectedImageBase64;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Validate student ID (exactly 8 digits)
+        document.getElementById('student_id').addEventListener('input', function(e) {
+            const value = e.target.value;
+            if (value && !/^\d{8}$/.test(value)) {
+                e.target.setCustomValidity('Student ID must be exactly 8 digits');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+        
+        // Validate index number (exactly 7 digits)
+        document.getElementById('index_number').addEventListener('input', function(e) {
+            const value = e.target.value;
+            if (value && !/^\d{7}$/.test(value)) {
+                e.target.setCustomValidity('Index Number must be exactly 7 digits');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('studentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Registering...';
+            
+            // Collect form data
+            const formData = new FormData(e.target);
+            const studentData = {};
+            
+            // Get all form fields
+            for (let [key, value] of formData.entries()) {
+                if (key !== 'face_image' && value.trim()) {
+                    studentData[key] = value.trim();
+                }
+            }
+            
+            // Add image if selected
+            if (selectedImageBase64) {
+                studentData.face_image = selectedImageBase64;
+            }
+            
+            try {
+                console.log('Sending POST request to:', `${API_BASE}/students/`);
+                console.log('Request data:', studentData);
+                
+                const response = await fetch(`${API_BASE}/students/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(studentData)
+                });
+                
+                console.log('Response status:', response.status, response.statusText);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const responseData = await response.json();
+                
+                // Show result
+                resultDiv.style.display = 'block';
+                
+                if (response.status === 201) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>${responseData.message}</p>
+                        <p><strong>Student ID:</strong> ${responseData.data[0].student_id}</p>
+                    `;
+                    
+                    // Reset form
+                    document.getElementById('studentForm').reset();
+                    document.getElementById('imagePreview').style.display = 'none';
+                    selectedImageBase64 = null;
+                } else if (response.status === 422) {
+                    resultDiv.className = 'result error';
+                    let errorHtml = '<h3>❌ HTTP 422: Validation Errors</h3><ul>';
+                    
+                    if (responseData.detail && Array.isArray(responseData.detail)) {
+                        responseData.detail.forEach(error => {
+                            const field = error.loc ? error.loc[error.loc.length - 1] : 'Unknown';
+                            errorHtml += `<li><strong>${field}:</strong> ${error.msg}</li>`;
+                        });
+                    } else {
+                        errorHtml += `<li>${responseData.detail || 'Unknown validation error'}</li>`;
+                    }
+                    
+                    errorHtml += '</ul>';
+                    resultDiv.innerHTML = errorHtml;
+                } else if (response.status === 409) {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ HTTP 409: Conflict</h3>
+                        <p>${responseData.detail}</p>
+                        <p>A student with this information already exists.</p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ HTTP ${response.status}: Error</h3>
+                        <p>${responseData.detail || 'Unknown error occurred'}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Request failed:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    resultDiv.innerHTML = `
+                        <h3>❌ CORS or Network Error</h3>
+                        <p>Failed to connect to the API server.</p>
+                        <p><strong>Possible causes:</strong></p>
+                        <ul>
+                            <li>API server is not running on ${API_BASE}</li>
+                            <li>CORS is not properly configured</li>
+                            <li>Network connectivity issues</li>
+                            <li>Make sure to access this page via http://localhost:8080, not file://</li>
+                        </ul>
+                        <p><strong>Error details:</strong> ${error.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>❌ Network Error</h3>
+                        <p>Unable to connect to the server: ${error.message}</p>
+                        <p>Make sure the API server is running on ${API_BASE}</p>
+                    `;
+                }
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Register Student';
+            }
+        });
+        
+        // Load data on page load
+        loadCollegesAndDepartments();
+    </script>
+</body>
+</html>

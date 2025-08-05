@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test</h1>
+    <button onclick="testCORS()">Test CORS</button>
+    <div id="result"></div>
+
+    <script>
+        async function testCORS() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing CORS...';
+            
+            try {
+                // Test GET request first
+                console.log('Testing GET request...');
+                const getResponse = await fetch('http://localhost:8000/colleges/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                console.log('GET Response:', getResponse.status, getResponse.statusText);
+                console.log('GET Headers:', [...getResponse.headers.entries()]);
+                
+                // Test POST request 
+                console.log('Testing POST request...');
+                const postResponse = await fetch('http://localhost:8000/students/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "student_id": "12345678",
+                        "index_number": "1234567",
+                        "first_name": "Test",
+                        "last_name": "Student",
+                        "email": "test@student.edu",
+                        "college_id": "37dc0b92-8f62-4b87-a4e4-78dd66b9ad60",
+                        "department_id": "cb41fa7f-7b2b-49a3-a736-c8a476c9b5e1"
+                    })
+                });
+                
+                console.log('POST Response:', postResponse.status, postResponse.statusText);
+                console.log('POST Headers:', [...postResponse.headers.entries()]);
+                
+                const postData = await postResponse.json();
+                console.log('POST Data:', postData);
+                
+                result.innerHTML = `
+                    <h3>CORS Test Results:</h3>
+                    <p><strong>GET /colleges/:</strong> ${getResponse.status} ${getResponse.statusText}</p>
+                    <p><strong>POST /students/:</strong> ${postResponse.status} ${postResponse.statusText}</p>
+                    <p>Check browser console for detailed headers and responses.</p>
+                `;
+                
+            } catch (error) {
+                console.error('CORS Error:', error);
+                result.innerHTML = `
+                    <h3>❌ CORS Error:</h3>
+                    <p>${error.message}</p>
+                    <p>Check browser console for details.</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

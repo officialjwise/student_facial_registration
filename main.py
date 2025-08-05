@@ -4,7 +4,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from api.routers import students, auth, admin, colleges, departments
+from api.routers import students, auth, admin, colleges, departments, exam_rooms
 from contextlib import asynccontextmanager
 import logging
 
@@ -102,7 +102,9 @@ Format: `Bearer <your-access-token>`
                 ("/colleges/", "get"),
                 ("/departments/", "get"),
                 ("/students/", "post"),
-                ("/students/recognize", "post")
+                ("/students/recognize", "post"),
+                ("/exam-room/mappings", "get"),
+                ("/exam-room/validate", "post")
             ]
             
             # Add security requirement for protected endpoints
@@ -141,6 +143,10 @@ app = FastAPI(
         {
             "name": "🏛️ Departments", 
             "description": "Department management operations - viewing is public, management requires admin auth"
+        },
+        {
+            "name": "🏛️ Exam Room Management",
+            "description": "Exam room assignment, management, and real-time student validation operations"
         },
         {
             "name": "👤 Admin",
@@ -307,7 +313,10 @@ async def custom_swagger_ui():
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict to frontend URL in production
+    allow_origins=[
+        "http://localhost:8080",
+        "http://localhost:8081"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -319,6 +328,7 @@ app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(colleges.router)
 app.include_router(departments.router)
+app.include_router(exam_rooms.router)
 
 @app.get("/", tags=["❤️ Health"])
 async def root():

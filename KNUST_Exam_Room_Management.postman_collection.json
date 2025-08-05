@@ -1,0 +1,1229 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "🏛️ KNUST Exam Room Management API",
+		"description": "Comprehensive Postman collection for testing KNUST Student System Exam Room Management endpoints.\n\n## 🎯 Features Tested\n- Exam room assignment CRUD operations\n- Real-time student validation with facial recognition\n- Room-based authentication and authorization\n- Analytics and logging functionality\n\n## 🔐 Authentication\nMost endpoints require admin authentication. Use the \"Admin Login\" request first to get your JWT token, which will be automatically set in the environment.\n\n## 📋 Test Flow\n1. **Health Check** - Verify API is running\n2. **Admin Login** - Get JWT token\n3. **Create Exam Rooms** - Set up room assignments\n4. **List/View Rooms** - Verify assignments\n5. **Update Rooms** - Modify assignments\n6. **Validate Students** - Test recognition system\n7. **Analytics** - Check dashboard data\n8. **Cleanup** - Delete test data\n\n## 👥 Development Team\n- **Festus Mensah** - 8556221\n- **Eleanor Annang** - 8534421\n- **Silas Amoakowah Ofosu** - 8532621",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "🔍 Health & Setup",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('API is running', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains welcome message', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.include('KNUST');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Test if the KNUST Student System API is running and accessible."
+					}
+				},
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Login successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Access token received', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('access_token');",
+									"    ",
+									"    // Store the token in environment for use in other requests",
+									"    const token = responseJson.data[0].access_token;",
+									"    pm.environment.set('jwt_token', token);",
+									"    console.log('JWT token stored:', token.substring(0, 20) + '...');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{admin_email}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticate as admin to get JWT token for protected endpoints."
+					}
+				}
+			],
+			"description": "Basic health checks and authentication setup."
+		},
+		{
+			"name": "🏛️ Exam Room Management",
+			"item": [
+				{
+					"name": "Create Exam Room - Room A1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Room data returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('id');",
+									"    pm.expect(responseJson.data[0].room_code).to.eql('ROOM_A1');",
+									"    ",
+									"    // Store room ID for later use",
+									"    pm.environment.set('room_a1_id', responseJson.data[0].id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room_code\": \"ROOM_A1\",\n    \"room_name\": \"Main Hall A1\",\n    \"index_start\": \"20100001\",\n    \"index_end\": \"20100050\",\n    \"capacity\": 50,\n    \"description\": \"Main examination hall for Computer Science students\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign"
+							]
+						},
+						"description": "Create a new exam room assignment for Room A1 with index numbers 20100001-20100050."
+					}
+				},
+				{
+					"name": "Create Exam Room - Room B2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Room data returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('id');",
+									"    pm.expect(responseJson.data[0].room_code).to.eql('ROOM_B2');",
+									"    ",
+									"    // Store room ID for later use",
+									"    pm.environment.set('room_b2_id', responseJson.data[0].id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room_code\": \"ROOM_B2\",\n    \"room_name\": \"Computer Lab B2\",\n    \"index_start\": \"20100051\",\n    \"index_end\": \"20100100\",\n    \"capacity\": 40,\n    \"description\": \"Computer laboratory for practical examinations\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign"
+							]
+						},
+						"description": "Create a new exam room assignment for Room B2 with index numbers 20100051-20100100."
+					}
+				},
+				{
+					"name": "Create Exam Room - Room C3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Room data returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('id');",
+									"    pm.expect(responseJson.data[0].room_code).to.eql('ROOM_C3');",
+									"    ",
+									"    // Store room ID for later use",
+									"    pm.environment.set('room_c3_id', responseJson.data[0].id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room_code\": \"ROOM_C3\",\n    \"room_name\": \"Engineering Hall C3\",\n    \"index_start\": \"20100101\",\n    \"index_end\": \"20100150\",\n    \"capacity\": 60,\n    \"description\": \"Large hall for engineering department examinations\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign"
+							]
+						},
+						"description": "Create a new exam room assignment for Room C3 with index numbers 20100101-20100150."
+					}
+				}
+			],
+			"description": "Create exam room assignments for testing."
+		},
+		{
+			"name": "📋 View & Manage Rooms",
+			"item": [
+				{
+					"name": "List All Room Mappings (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mappings retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Multiple rooms returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.data.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test('Room data structure is correct', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const room = responseJson.data[0];",
+									"    pm.expect(room).to.have.property('id');",
+									"    pm.expect(room).to.have.property('room_code');",
+									"    pm.expect(room).to.have.property('room_name');",
+									"    pm.expect(room).to.have.property('index_start');",
+									"    pm.expect(room).to.have.property('index_end');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/exam-room/mappings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"mappings"
+							]
+						},
+						"description": "Retrieve all current exam room mappings. This is a public endpoint."
+					}
+				},
+				{
+					"name": "Get Specific Room by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room retrieved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Correct room returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0].room_code).to.eql('ROOM_A1');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/exam-room/mappings/{{room_a1_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"mappings",
+								"{{room_a1_id}}"
+							]
+						},
+						"description": "Retrieve a specific exam room mapping by ID. Requires admin authentication."
+					}
+				},
+				{
+					"name": "Update Room Assignment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room updated successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Updated data returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0].capacity).to.eql(55);",
+									"    pm.expect(responseJson.data[0].description).to.include('Updated');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"capacity\": 55,\n    \"description\": \"Main examination hall for Computer Science students - Updated capacity\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign/{{room_a1_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign",
+								"{{room_a1_id}}"
+							]
+						},
+						"description": "Update an existing exam room assignment. Only provided fields will be updated."
+					}
+				}
+			],
+			"description": "View and manage existing exam room assignments."
+		},
+		{
+			"name": "🎯 Student Validation & Recognition",
+			"item": [
+				{
+					"name": "Test Index Number Validation - Valid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Validation completed successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Student is valid for room', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0].is_valid).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/exam-room/validate/ROOM_A1/20100025",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"validate",
+								"ROOM_A1",
+								"20100025"
+							]
+						},
+						"description": "Test validation of a student index number that should be valid for Room A1 (20100001-20100050)."
+					}
+				},
+				{
+					"name": "Test Index Number Validation - Invalid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Validation completed successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Student is invalid for room', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0].is_valid).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/exam-room/validate/ROOM_A1/20100075",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"validate",
+								"ROOM_A1",
+								"20100075"
+							]
+						},
+						"description": "Test validation of a student index number that should be invalid for Room A1 (outside range 20100001-20100050)."
+					}
+				},
+				{
+					"name": "Face Recognition - Valid Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Recognition completed', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains validation result', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('status');",
+									"    pm.expect(responseJson.data[0]).to.have.property('beep_type');",
+									"    pm.expect(responseJson.data[0]).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"face_image\": \"{{sample_base64_image}}\",\n    \"room_code\": \"ROOM_A1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/recognize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"recognize"
+							]
+						},
+						"description": "Test face recognition with room validation. Uses sample base64 image data."
+					}
+				},
+				{
+					"name": "Face Recognition - No Face Image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Bad request for missing image', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Error message about missing image', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('Face image is required');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"face_image\": \"\",\n    \"room_code\": \"ROOM_A1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/recognize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"recognize"
+							]
+						},
+						"description": "Test recognition endpoint with missing face image to verify error handling."
+					}
+				},
+				{
+					"name": "Face Recognition - Invalid Base64",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Bad request for invalid base64', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Error message about invalid format', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('Invalid base64');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"face_image\": \"invalid_base64_data!!!\",\n    \"room_code\": \"ROOM_A1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/recognize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"recognize"
+							]
+						},
+						"description": "Test recognition endpoint with invalid base64 data to verify error handling."
+					}
+				}
+			],
+			"description": "Test student validation and face recognition functionality."
+		},
+		{
+			"name": "📊 Analytics & Monitoring",
+			"item": [
+				{
+					"name": "Registration Trends",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Analytics data retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Trends data structure', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('trends');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/analytics/registration-trends",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"analytics",
+								"registration-trends"
+							]
+						},
+						"description": "Get student registration trends over time for dashboard analytics."
+					}
+				},
+				{
+					"name": "College Distribution",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('College distribution retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Distribution data structure', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('distribution');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/analytics/college-distribution",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"analytics",
+								"college-distribution"
+							]
+						},
+						"description": "Get student distribution across colleges for analytics dashboard."
+					}
+				},
+				{
+					"name": "Department Enrollment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Department enrollment retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Enrollment data structure', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('enrollment');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/analytics/department-enrollment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"analytics",
+								"department-enrollment"
+							]
+						},
+						"description": "Get department-wise student enrollment statistics."
+					}
+				},
+				{
+					"name": "System Health",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('System health retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Health metrics structure', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('health_metrics');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/analytics/system-health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"analytics",
+								"system-health"
+							]
+						},
+						"description": "Get real-time system health metrics and performance data."
+					}
+				},
+				{
+					"name": "Admin Dashboard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Dashboard data retrieved', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Dashboard contains statistics', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0]).to.have.property('total_students');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"dashboard"
+							]
+						},
+						"description": "Get comprehensive admin dashboard data including statistics and recent activity."
+					}
+				}
+			],
+			"description": "Test analytics and monitoring endpoints for the admin dashboard."
+		},
+		{
+			"name": "🧪 Error Handling & Edge Cases",
+			"item": [
+				{
+					"name": "Create Room with Duplicate Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Duplicate room rejected', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Error message about duplicate', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('already exists');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room_code\": \"ROOM_A1\",\n    \"room_name\": \"Duplicate Room\",\n    \"index_start\": \"20200001\",\n    \"index_end\": \"20200050\",\n    \"capacity\": 30,\n    \"description\": \"This should fail due to duplicate room code\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign"
+							]
+						},
+						"description": "Test error handling when trying to create a room with duplicate room code."
+					}
+				},
+				{
+					"name": "Get Non-existent Room",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room not found', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Error message about not found', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/exam-room/mappings/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"mappings",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Test error handling when trying to get a non-existent room by ID."
+					}
+				},
+				{
+					"name": "Access Protected Endpoint Without Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Unauthorized access rejected', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Authentication error message', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('Not authenticated');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room_code\": \"UNAUTHORIZED_ROOM\",\n    \"room_name\": \"Should Fail\",\n    \"index_start\": \"99999999\",\n    \"index_end\": \"99999999\",\n    \"capacity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign"
+							]
+						},
+						"description": "Test that protected endpoints reject requests without proper authentication."
+					}
+				},
+				{
+					"name": "Validate Non-existent Room",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Validation handles non-existent room', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Validation shows room not found', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data[0].is_valid).to.be.false;",
+									"    pm.expect(responseJson.data[0].validation_message).to.include('not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/exam-room/validate/NONEXISTENT_ROOM/20100025",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"validate",
+								"NONEXISTENT_ROOM",
+								"20100025"
+							]
+						},
+						"description": "Test validation with a non-existent room code."
+					}
+				}
+			],
+			"description": "Test error handling and edge cases for robust API behavior."
+		},
+		{
+			"name": "🧹 Cleanup (Optional)",
+			"item": [
+				{
+					"name": "Delete Room A1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room deleted successfully', function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign/{{room_a1_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign",
+								"{{room_a1_id}}"
+							]
+						},
+						"description": "Delete the test Room A1 assignment. Run this to clean up test data."
+					}
+				},
+				{
+					"name": "Delete Room B2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room deleted successfully', function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign/{{room_b2_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign",
+								"{{room_b2_id}}"
+							]
+						},
+						"description": "Delete the test Room B2 assignment. Run this to clean up test data."
+					}
+				},
+				{
+					"name": "Delete Room C3",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Room deleted successfully', function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/exam-room/assign/{{room_c3_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"assign",
+								"{{room_c3_id}}"
+							]
+						},
+						"description": "Delete the test Room C3 assignment. Run this to clean up test data."
+					}
+				},
+				{
+					"name": "Verify Cleanup - List Rooms",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cleanup verification successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Test rooms have been deleted', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const testRoomCodes = ['ROOM_A1', 'ROOM_B2', 'ROOM_C3'];",
+									"    const remainingRooms = responseJson.data.map(room => room.room_code);",
+									"    ",
+									"    testRoomCodes.forEach(code => {",
+									"        pm.expect(remainingRooms).to.not.include(code);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/exam-room/mappings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"exam-room",
+								"mappings"
+							]
+						},
+						"description": "Verify that test rooms have been successfully deleted during cleanup."
+					}
+				}
+			],
+			"description": "Optional cleanup requests to remove test data after testing is complete."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script for the collection",
+					"console.log('🏛️ KNUST Exam Room Management API Test');",
+					"console.log('Request:', pm.request.method, pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script for the collection",
+					"console.log('Response:', pm.response.status, pm.response.statusText);",
+					"console.log('Response Time:', pm.response.responseTime + 'ms');",
+					"",
+					"// Add global response time check",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Add global content-type check for successful responses",
+					"if (pm.response.status === 200 || pm.response.status === 201) {",
+					"    pm.test('Response has JSON content-type', function () {",
+					"        pm.expect(pm.response.headers.get('content-type')).to.include('application/json');",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "collection_info",
+			"value": "KNUST Exam Room Management API Test Collection v1.0",
+			"type": "string"
+		}
+	]
+}

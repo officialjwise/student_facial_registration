@@ -60,19 +60,7 @@ A comprehensive RESTful API for student registration, facial recognition, and ad
         routes=app.routes,
     )
         
-        <div class="auth-reminder">
-            💡 <strong>Quick Start:</strong> Register → Verify → Login → Click "🔒 Authorize" → Test!
-        </div>api.utils import get_openapi
-from fastapi.security import HTTPBearer
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
-from api.routers import students, auth, admin, colleges, departments
-from contextlib import asynccontextmanager
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# (Removed misplaced HTML fragment and duplicate imports)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

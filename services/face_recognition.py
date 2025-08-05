@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict
 from io import BytesIO
 from uuid import UUID
 import numpy as np
@@ -267,6 +267,93 @@ async def store_face_embedding(student_id: UUID, image_data: bytes) -> bool:
         logger.error(f"Error storing face embedding: {str(e)}")
         return False
 
+async def detect_faces_with_bounding_boxes(image_data: bytes) -> Dict:
+    """
+    Detect faces in image and return bounding box coordinates.
+    
+    Returns:
+        Dict containing:
+        - faces_detected: number of faces found
+        - face_locations: list of bounding box coordinates [(top, right, bottom, left), ...]
+        - image_dimensions: (width, height) of the image
+        - face_encodings: facial embeddings if faces found
+    """
+    _check_face_recognition_availability()
+    
+    # Validate image data
+    is_valid, error_message = _validate_image_data(image_data)
+    if not is_valid:
+        logger.warning(f"Invalid image data: {error_message}")
+        return {
+            "faces_detected": 0,
+            "face_locations": [],
+            "image_dimensions": (0, 0),
+            "face_encodings": [],
+            "error": error_message
+        }
+
+    try:
+        # Load the image
+        img = face_recognition.load_image_file(BytesIO(image_data))
+        
+        # Get image dimensions
+        height, width = img.shape[:2]
+        
+        # Find face locations
+        face_locations = await asyncio.get_event_loop().run_in_executor(
+            face_recognition_executor, face_recognition.face_locations, img
+        )
+        
+        # Get face encodings if faces are found
+        face_encodings = []
+        if face_locations:
+            face_encodings = await asyncio.get_event_loop().run_in_executor(
+                face_recognition_executor, face_recognition.face_encodings, img, face_locations
+            )
+        
+        # Convert face_encodings to lists for JSON serialization
+        face_encodings_list = [encoding.tolist() for encoding in face_encodings]
+        
+        return {
+            "faces_detected": len(face_locations),
+            "face_locations": face_locations,  # [(top, right, bottom, left), ...]
+            "image_dimensions": (width, height),
+            "face_encodings": face_encodings_list
+        }
+        
+    except Exception as e:
+        logger.error(f"Face detection error: {str(e)}")
+        return {
+            "faces_detected": 0,
+            "face_locations": [],
+            "image_dimensions": (0, 0),
+            "face_encodings": [],
+            "error": f"Face detection failed: {str(e)}"
+        }
+
+async def extract_face_embedding_with_bbox(image_data: bytes) -> Tuple[Optional[np.ndarray], Dict]:
+    """
+    Extract facial embedding and return bounding box information.
+    
+    Returns:
+        Tuple of (face_embedding, bounding_box_info)
+    """
+    detection_result = await detect_faces_with_bounding_boxes(image_data)
+    
+    if detection_result["faces_detected"] == 0:
+        return None, detection_result
+    
+    if detection_result["faces_detected"] > 1:
+        detection_result["error"] = "Multiple faces detected. Please provide an image with a single face."
+        return None, detection_result
+    
+    # Return the first (and only) face encoding as numpy array
+    if detection_result["face_encodings"]:
+        face_embedding = np.array(detection_result["face_encodings"][0])
+        return face_embedding, detection_result
+    
+    return None, detection_result
+
 # Cleanup function for graceful shutdown
 def cleanup_face_recognition():
     """Cleanup face recognition resources."""
@@ -275,3 +362,10 @@ def cleanup_face_recognition():
         logger.info("Face recognition executor shut down successfully")
     except Exception as e:
         logger.error(f"Error during face recognition cleanup: {str(e)}")
+
+async def recognize_face_from_base64(image_data: bytes):
+    """
+    Recognize a face from base64-decoded image data.
+    This is a wrapper around the existing recognize_face function.
+    """
+    return await recognize_face(image_data)

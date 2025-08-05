@@ -83,3 +83,12 @@ async def delete_admin_user(admin_id: UUID) -> None:
     except Exception as e:
         logger.error(f"Error deleting admin user {admin_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+
+async def get_all_admin_users() -> list[AdminUser]:
+    """Retrieve all admin users."""
+    try:
+        response = supabase.table("admin_users").select("*").execute()
+        return [AdminUser(**admin) for admin in response.data]
+    except Exception as e:
+        logger.error(f"Error retrieving admin users: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

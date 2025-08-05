@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from schemas.auth import AdminCreate, OTPVerify, Token, AdminLoginOTP, LoginOTPVerify, RefreshTokenRequest
+from schemas.auth import AdminCreate, OTPVerify, Token, AdminLoginOTP, LoginOTPVerify, RefreshTokenRequest, AdminLogin
 from core.security import verify_password, create_access_token, create_refresh_token, validate_refresh_token
 from services.auth import register_admin, generate_login_otp, verify_login_otp
 from models.database import supabase
@@ -79,3 +79,31 @@ async def refresh_access_token(refresh_data: RefreshTokenRequest):
     except Exception as e:
         logger.error(f"Error refreshing token: {str(e)}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+@router.post("/logout", summary="Logout", 
+             description="Logout admin user (invalidate tokens)")
+async def logout_admin():
+    """Logout admin user."""
+    # Note: With JWT tokens, logout is typically handled on the client side
+    # by removing the tokens from storage. For server-side token invalidation,
+    # you would need to implement a token blacklist mechanism.
+    return {
+        "message": "Logged out successfully. Please remove tokens from client storage."
+    }
+
+@router.post("/login-json", response_model=Token, summary="JSON Login", 
+             description="Direct login with JSON payload (returns tokens immediately)")
+async def login_admin_json(admin_login: AdminLogin):
+    """Authenticate admin with JSON payload and issue JWT token."""
+    try:
+        response = supabase.table("admin_users").select("*").eq("email", admin_login.email).eq("is_verified", True).execute()
+        if not response.data or not verify_password(admin_login.password, response.data[0]["hashed_password"]):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        
+        access_token = create_access_token(data={"sub": admin_login.email})
+        refresh_token = create_refresh_token(data={"sub": admin_login.email})
+        logger.info(f"Admin logged in via JSON: {admin_login.email}")
+        return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    except Exception as e:
+        logger.error(f"Error logging in admin via JSON: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Login failed")

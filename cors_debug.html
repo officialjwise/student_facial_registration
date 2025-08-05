@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Debug Test</title>
+</head>
+<body>
+    <h1>CORS Debug Test</h1>
+    <p>Open browser console (F12) and run the test commands below:</p>
+    
+    <div style="background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>Test 1: Simple GET request</h3>
+        <code style="display: block; background: white; padding: 10px; margin: 5px 0;">
+fetch('http://localhost:8000/colleges/')
+  .then(response => {
+    console.log('Status:', response.status);
+    console.log('Headers:', [...response.headers.entries()]);
+    return response.json();
+  })
+  .then(data => console.log('Data:', data))
+  .catch(error => console.error('Error:', error));
+        </code>
+    </div>
+
+    <div style="background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>Test 2: POST request to students</h3>
+        <code style="display: block; background: white; padding: 10px; margin: 5px 0;">
+fetch('http://localhost:8000/students/', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    "student_id": "12345678",
+    "index_number": "1234567", 
+    "first_name": "Test",
+    "last_name": "Student",
+    "email": "test@student.edu",
+    "college_id": "37dc0b92-8f62-4b87-a4e4-78dd66b9ad60",
+    "department_id": "cb41fa7f-7b2b-49a3-a736-c8a476c9b5e1"
+  })
+})
+.then(response => {
+  console.log('Status:', response.status);
+  console.log('Headers:', [...response.headers.entries()]);
+  return response.json();
+})
+.then(data => console.log('Data:', data))
+.catch(error => console.error('Error:', error));
+        </code>
+    </div>
+    
+    <div style="background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>Test 3: Check current page origin</h3>
+        <code style="display: block; background: white; padding: 10px; margin: 5px 0;">
+console.log('Current origin:', window.location.origin);
+console.log('Current protocol:', window.location.protocol);
+        </code>
+    </div>
+
+    <button onclick="runAllTests()">Run All Tests</button>
+
+    <div id="results" style="margin-top: 20px;"></div>
+
+    <script>
+        async function runAllTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Running tests...</h3>';
+            
+            let output = '';
+            
+            output += '<h4>Current page info:</h4>';
+            output += `<p>Origin: ${window.location.origin}</p>`;
+            output += `<p>Protocol: ${window.location.protocol}</p>`;
+            
+            try {
+                output += '<h4>Test 1: GET /colleges/</h4>';
+                const getResponse = await fetch('http://localhost:8000/colleges/');
+                output += `<p>Status: ${getResponse.status} ${getResponse.statusText}</p>`;
+                output += `<p>CORS Origin header: ${getResponse.headers.get('access-control-allow-origin')}</p>`;
+                output += `<p>CORS Credentials header: ${getResponse.headers.get('access-control-allow-credentials')}</p>`;
+                
+                output += '<h4>Test 2: POST /students/</h4>';
+                const postResponse = await fetch('http://localhost:8000/students/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        "student_id": "12345678",
+                        "index_number": "1234567", 
+                        "first_name": "Test",
+                        "last_name": "Student",
+                        "email": "test@student.edu",
+                        "college_id": "37dc0b92-8f62-4b87-a4e4-78dd66b9ad60",
+                        "department_id": "cb41fa7f-7b2b-49a3-a736-c8a476c9b5e1"
+                    })
+                });
+                output += `<p>Status: ${postResponse.status} ${postResponse.statusText}</p>`;
+                output += `<p>CORS Origin header: ${postResponse.headers.get('access-control-allow-origin')}</p>`;
+                output += `<p>CORS Credentials header: ${postResponse.headers.get('access-control-allow-credentials')}</p>`;
+                
+                const postData = await postResponse.json();
+                output += `<p>Response: ${JSON.stringify(postData, null, 2)}</p>`;
+                
+                output += '<h4>✅ All tests completed successfully!</h4>';
+                output += '<p>CORS is working properly.</p>';
+                
+            } catch (error) {
+                output += `<h4>❌ Test failed with error:</h4>`;
+                output += `<p style="color: red;">${error.name}: ${error.message}</p>`;
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    output += '<p><strong>This is likely a CORS issue or the server is not running.</strong></p>';
+                }
+            }
+            
+            results.innerHTML = output;
+        }
+    </script>
+</body>
+</html>
