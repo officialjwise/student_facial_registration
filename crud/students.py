@@ -42,7 +42,22 @@ async def create_student(student: StudentCreate, face_embedding: Optional[List[f
         logger.info(f"Created student with ID: {response.data[0]['id']} {'with' if face_embedding else 'without'} face embedding")
         return Student(**response.data[0])
     except Exception as e:
-        logger.error(f"Error creating student: {str(e)}")
+        error_str = str(e)
+        logger.error(f"Error creating student: {error_str}")
+        logger.error(f"Exception type: {type(e)}")
+        
+        # Check for database constraint violations (more comprehensive check)
+        if ("duplicate key" in error_str.lower() or 
+            "23505" in error_str or
+            "unique constraint" in error_str.lower() or
+            "foreign key constraint" in error_str.lower() or
+            "23503" in error_str):
+            # Let the router handle the specific database constraint error
+            logger.info(f"Database constraint violation detected, re-raising: {error_str}")
+            raise e
+        
+        # For other errors, return generic 500
+        logger.error(f"Generic error occurred, returning 500: {error_str}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 async def get_student_by_id(student_id: UUID) -> Optional[Student]:

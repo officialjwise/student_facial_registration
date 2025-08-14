@@ -26,31 +26,62 @@ async def register_student(student: StudentCreate):
         if student.face_image:
             try:
                 # Check if the base64 string has the proper prefix
-                face_image_data = student.face_image
-                if face_image_data.startswith('data:image/'):
+                face_image_data = student.face_image.strip()
+                
+                # Validate base64 format
+                if not face_image_data:
+                    logger.warning("Empty face_image string provided, proceeding without face embedding")
+                elif face_image_data.startswith('data:image/'):
                     # Remove data URL prefix if present
                     face_image_data = face_image_data.split(',', 1)[-1]
-                
-                image_data = base64.b64decode(face_image_data)
-                
-                if len(image_data) == 0:
-                    logger.warning("Empty image data provided, proceeding without face embedding")
+                    
+                    # Additional validation for base64 data
+                    if not face_image_data or len(face_image_data) < 100:
+                        logger.warning("Face image data too short, proceeding without face embedding")
+                    else:
+                        try:
+                            image_data = base64.b64decode(face_image_data, validate=True)
+                            
+                            if len(image_data) == 0:
+                                logger.warning("Empty image data after decoding, proceeding without face embedding")
+                            else:
+                                # Extract face embedding (allow registration without face detection)
+                                try:
+                                    embedding = await extract_face_embedding(image_data)
+                                    if embedding is not None:
+                                        logger.info("Face detected and embedding extracted successfully")
+                                    else:
+                                        logger.warning("No face detected, but allowing registration to proceed")
+                                except HTTPException as he:
+                                    # If face detection fails, log but allow registration to continue
+                                    logger.warning(f"Face detection failed: {he.detail}, but allowing registration to proceed")
+                                except Exception as e:
+                                    logger.warning(f"Face recognition error: {str(e)}, but allowing registration to proceed")
+                        except (binascii.Error, ValueError) as e:
+                            logger.warning(f"Invalid base64 image data: {str(e)}, proceeding without face embedding")
                 else:
-                    # Extract face embedding (allow registration without face detection)
+                    # Try to decode as plain base64 without data URL prefix
                     try:
-                        embedding = await extract_face_embedding(image_data)
-                        if embedding is not None:
-                            logger.info("Face detected and embedding extracted successfully")
-                        else:
-                            logger.warning("No face detected, but allowing registration to proceed")
-                    except HTTPException as he:
-                        # If face detection fails, log but allow registration to continue
-                        logger.warning(f"Face detection failed: {he.detail}, but allowing registration to proceed")
-                    except Exception as e:
-                        logger.warning(f"Face recognition error: {str(e)}, but allowing registration to proceed")
+                        image_data = base64.b64decode(face_image_data, validate=True)
                         
-            except binascii.Error:
-                logger.warning("Invalid base64 image format, proceeding without face embedding")
+                        if len(image_data) == 0:
+                            logger.warning("Empty image data after decoding, proceeding without face embedding")
+                        else:
+                            # Extract face embedding (allow registration without face detection)
+                            try:
+                                embedding = await extract_face_embedding(image_data)
+                                if embedding is not None:
+                                    logger.info("Face detected and embedding extracted successfully")
+                                else:
+                                    logger.warning("No face detected, but allowing registration to proceed")
+                            except HTTPException as he:
+                                # If face detection fails, log but allow registration to continue
+                                logger.warning(f"Face detection failed: {he.detail}, but allowing registration to proceed")
+                            except Exception as e:
+                                logger.warning(f"Face recognition error: {str(e)}, but allowing registration to proceed")
+                    except (binascii.Error, ValueError) as e:
+                        logger.warning(f"Invalid base64 image data: {str(e)}, proceeding without face embedding")
+                        
             except Exception as e:
                 logger.warning(f"Error processing face image: {str(e)}, proceeding without face embedding")
         else:
@@ -75,7 +106,10 @@ async def register_student(student: StudentCreate):
         )
     except Exception as e:
         error_msg = str(e)
-        if "duplicate key" in error_msg.lower():
+        logger.error(f"Error registering student: {error_msg}")
+        
+        # Handle Supabase database constraint violations
+        if "duplicate key" in error_msg.lower() or "23505" in error_msg:
             if "students_student_id_key" in error_msg:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
@@ -91,8 +125,32 @@ async def register_student(student: StudentCreate):
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"A student with email {student.email} already exists"
                 )
+            else:
+                # Generic duplicate key error
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A student with this information already exists"
+                )
         
-        logger.error(f"Error registering student: {error_msg}")
+        # Handle foreign key constraint violations
+        elif "foreign key constraint" in error_msg.lower() or "23503" in error_msg:
+            if "college_id" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid college ID. Please select a valid college."
+                )
+            elif "department_id" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid department ID. Please select a valid department."
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid reference data. Please check your selections."
+                )
+        
+        # Generic error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to register student. Please try again."

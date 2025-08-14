@@ -91,8 +91,8 @@ def generate_otp_secret() -> str:
 async def store_otp_data_for_admin(email: EmailStr, otp_secret: str, otp_code: str) -> bool:
     """Store the OTP secret and code with expiration for the admin user."""
     try:
-        # Calculate expiration time (5 minutes from now)
-        expiration_time = datetime.utcnow() + timedelta(minutes=5)
+        # Calculate expiration time (15 minutes from now - more generous timeout)
+        expiration_time = datetime.utcnow() + timedelta(minutes=15)
         
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(
@@ -186,18 +186,46 @@ async def verify_admin_otp(email: EmailStr, provided_otp: str) -> bool:
         
         # Check if OTP has expired
         if admin_user.get("otp_expires_at"):
-            expiration_time = datetime.fromisoformat(admin_user["otp_expires_at"].replace('Z', '+00:00'))
-            if datetime.utcnow() > expiration_time.replace(tzinfo=None):
-                logger.warning(f"OTP expired for email: {email}")
+            expiration_str = admin_user["otp_expires_at"]
+            try:
+                # Handle different datetime formats from Supabase
+                if expiration_str.endswith('Z'):
+                    expiration_time = datetime.fromisoformat(expiration_str.replace('Z', '+00:00'))
+                elif '+' in expiration_str or expiration_str.endswith('00:00'):
+                    expiration_time = datetime.fromisoformat(expiration_str)
+                else:
+                    expiration_time = datetime.fromisoformat(expiration_str)
+                
+                # Convert to UTC for comparison
+                if expiration_time.tzinfo is not None:
+                    expiration_utc = expiration_time.utctimetuple()
+                    expiration_time = datetime(*expiration_utc[:6])
+                
+                current_time = datetime.utcnow()
+                
+                logger.debug(f"OTP expiration check - Current: {current_time}, Expires: {expiration_time}")
+                
+                if current_time > expiration_time:
+                    logger.warning(f"OTP expired for email: {email}. Current: {current_time}, Expired: {expiration_time}")
+                    return False
+                    
+            except Exception as e:
+                logger.error(f"Error parsing expiration time for {email}: {str(e)}")
+                # If we can't parse the expiration time, consider it expired for safety
                 return False
         
         # Verify TOTP code using the stored secret
         totp = pyotp.TOTP(admin_user["otp_secret"])
-        is_valid = totp.verify(provided_otp, valid_window=1)  # Allow 1 window (30s) tolerance
+        is_valid = totp.verify(provided_otp, valid_window=2)  # Allow 2 windows (60s) tolerance for better UX
+        
+        logger.debug(f"TOTP verification result for {email}: {is_valid}")
         
         # Also check against the stored code as backup
         if not is_valid:
             is_valid = (provided_otp == admin_user["otp_code"])
+            logger.debug(f"Backup code verification result for {email}: {is_valid}")
+        
+        logger.debug(f"Final OTP verification result for {email}: {is_valid}")
         
         if is_valid:
             # Mark admin as verified and clear OTP data
@@ -275,7 +303,26 @@ async def verify_login_otp(email: EmailStr, provided_otp: str) -> dict:
         # Verify OTP
         is_valid = await verify_admin_otp(email, provided_otp)
         if not is_valid:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired OTP")
+            # Check if the issue is expiration by getting the admin user
+            admin_user = await get_admin_user_by_email(email)
+            if admin_user and admin_user.get("otp_expires_at"):
+                expiration_str = admin_user["otp_expires_at"]
+                try:
+                    if expiration_str.endswith('Z'):
+                        expiration_time = datetime.fromisoformat(expiration_str.replace('Z', '+00:00'))
+                    else:
+                        expiration_time = datetime.fromisoformat(expiration_str)
+                    
+                    if expiration_time.tzinfo is not None:
+                        expiration_utc = expiration_time.utctimetuple()
+                        expiration_time = datetime(*expiration_utc[:6])
+                    
+                    if datetime.utcnow() > expiration_time:
+                        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="OTP has expired. Please request a new OTP.")
+                except:
+                    pass
+            
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid OTP code. Please check your email and try again.")
         
         # Generate tokens
         from core.security import create_access_token, create_refresh_token
