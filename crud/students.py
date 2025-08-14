@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 async def create_student(student: StudentCreate, face_embedding: Optional[List[float]] = None) -> Student:
     """Create a new student in the database."""
     try:
-        # Get all data from the student object
-        data = student.dict(exclude={"face_image"})
+        # Get all data from the student object (include face_image now)
+        data = student.dict()
         
         # Remove fields that don't exist in the database table
         # Based on the error, these fields are not in the actual database schema
@@ -95,8 +95,7 @@ async def update_student(student_id: UUID, student: StudentUpdate) -> Student:
     """Update a student's details."""
     try:
         data = student.dict(exclude_unset=True)
-        if "face_image" in data:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Face image update not allowed here")
+        # Face image updates are now allowed
         
         # Remove fields that don't exist in the database table
         fields_to_remove = ["date_of_birth", "gender", "program", "level", "phone_number", "middle_name"]

@@ -68,6 +68,7 @@ class StudentUpdate(BaseModel):
 class Student(StudentBase):
     """Schema for returning student data."""
     id: UUID
+    face_image: Optional[str] = None  # Include face_image in response
     face_embedding: Optional[List[float]] = None
     created_at: str
 

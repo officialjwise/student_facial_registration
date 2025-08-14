@@ -19,6 +19,7 @@ class Student(BaseModel):
     level: Optional[str] = None
     college_id: UUID
     department_id: UUID
+    face_image: Optional[str] = None  # Add face_image field
     face_embedding: Optional[List[float]] = None
     created_at: Optional[str] = None
 
